@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<title>Aadhav Bharadwaj — constellation graph (design MVP)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --void:#04050a; --ink:#e9ecf5; --muted:#8b93a7;
+    --hair:rgba(180,196,236,.14); --hair-strong:rgba(180,196,236,.28);
+    --amber:#f3b14e; --teal:#36d6c3; --panel:rgba(10,13,22,.74);
+    --proj:#a78bfa; --exp:#ffcf7a; --skill:#ff7e60;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--void);color:var(--ink);overflow:hidden}
+  body{font-family:"IBM Plex Mono",ui-monospace,monospace;-webkit-font-smoothing:antialiased;cursor:default}
+  #sky{position:fixed;inset:0;display:block;width:100vw;height:100vh;touch-action:none}
+
+  #scrim{position:fixed;inset:0;background:radial-gradient(120% 120% at 70% 50%,rgba(2,3,8,.2),rgba(2,3,8,.78));
+    opacity:0;pointer-events:none;transition:opacity .5s ease;z-index:20}
+  #scrim.on{opacity:1;pointer-events:auto}
+
+  .hud{position:fixed;z-index:30;pointer-events:none}
+  .hud *{pointer-events:auto}
+  .label{font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted)}
+
+  #idblock{top:clamp(16px,3.2vw,38px);left:clamp(16px,3.2vw,44px);max-width:min(42ch,66vw)}
+  #idblock .eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  #idblock .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px 2px rgba(54,214,195,.8)}
+  #name{font-family:"Fraunces",Georgia,serif;font-weight:340;font-size:clamp(26px,4.2vw,48px);line-height:1.02;margin:0}
+  #role{margin:9px 0 0;font-size:11.5px;letter-spacing:.05em;color:var(--muted);max-width:40ch;line-height:1.6}
+
+  #links{top:clamp(16px,3.2vw,40px);right:clamp(16px,3.2vw,44px);display:flex;flex-direction:column;align-items:flex-end;gap:13px;text-align:right}
+  #links a{color:var(--ink);text-decoration:none;font-size:12px;letter-spacing:.05em;opacity:.82;transition:opacity .2s,color .2s;cursor:pointer}
+  #links a:hover{opacity:1;color:var(--teal)}
+  #resume{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--hair-strong);padding:8px 14px;border-radius:999px;background:rgba(12,16,26,.5);backdrop-filter:blur(8px)}
+  #resume:hover{border-color:var(--teal);color:var(--teal)}
+  #social{display:flex;gap:16px}
+
+  #legend{left:clamp(16px,3.2vw,44px);bottom:clamp(16px,2.8vw,38px)}
+  #legend .head{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+  #legend .chev{transition:transform .25s;color:var(--muted);font-size:9px}
+  #legend.collapsed .chev{transform:rotate(-90deg)}
+  #legend ul{list-style:none;margin:11px 0 0;padding:0;display:grid;gap:8px;overflow:hidden;max-height:240px;opacity:1;transition:max-height .3s ease,opacity .25s,margin .3s}
+  #legend.collapsed ul{max-height:0;opacity:0;margin-top:0}
+  #legend li{display:flex;align-items:center;gap:10px;font-size:10.5px;color:var(--muted);letter-spacing:.04em}
+  #legend .s{border-radius:50%;flex:none}
+
+  #controls{right:clamp(16px,3.2vw,44px);bottom:clamp(16px,2.8vw,38px);display:flex;align-items:center;gap:20px}
+  #controls button{background:none;border:0;color:var(--muted);font-family:inherit;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:8px;transition:color .2s}
+  #controls button:hover{color:var(--ink)}
+  #readme-btn .q{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border:1px solid var(--hair-strong);border-radius:50%;font-size:10px;line-height:1}
+  #motion .ind{width:22px;height:11px;border:1px solid var(--hair-strong);border-radius:999px;position:relative}
+  #motion .ind::after{content:"";position:absolute;top:1px;left:1px;width:7px;height:7px;border-radius:50%;background:var(--teal);transition:left .25s;box-shadow:0 0 8px rgba(54,214,195,.7)}
+  #motion.off .ind::after{left:11px;background:var(--muted);box-shadow:none}
+
+  #thesisveil{position:fixed;inset:0;z-index:24;background:radial-gradient(120% 120% at 50% 50%, rgba(3,4,9,.62), rgba(2,3,8,.9));opacity:0;pointer-events:none;transition:opacity 1.3s ease}
+  #thesisveil.on{opacity:1}
+  #thesis{position:fixed;z-index:25;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 1.4s ease}
+  #thesis .t{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:330;font-size:clamp(20px,3.2vw,34px);color:rgba(240,243,250,.96)}
+  #thesis .sub{margin-top:14px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:#9aa3b6}
+
+  #hint{position:fixed;z-index:25;left:50%;bottom:clamp(80px,11vh,120px);transform:translateX(-50%);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);opacity:0;transition:opacity 1s ease;pointer-events:none;display:flex;align-items:center;gap:10px}
+  #hint .pulse{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:hp 2.4s ease-in-out infinite}
+  @keyframes hp{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
+
+  #tip{position:fixed;z-index:45;transform:translate(-50%,calc(-100% - 14px));pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;text-align:center;
+    background:rgba(6,9,16,.86);backdrop-filter:blur(7px);border:1px solid var(--hair-strong);border-radius:9px;padding:7px 13px;box-shadow:0 10px 34px rgba(0,0,0,.6)}
+  #tip .nm{font-family:"Fraunces",serif;font-size:13px;color:var(--ink)}
+  #tip .tier{display:block;font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:#b8c0d2;margin-top:3px}
+
+  /* ---- side panel (gallery · lab · skill) ---- */
+  #panel{position:fixed;z-index:40;top:0;right:0;height:100%;width:min(430px,92vw);background:var(--panel);backdrop-filter:blur(22px) saturate(1.1);
+    border-left:1px solid var(--hair-strong);box-shadow:-40px 0 120px rgba(0,0,0,.6);transform:translateX(102%);transition:transform .55s cubic-bezier(.16,1,.3,1);
+    padding:clamp(24px,3.6vw,40px);display:flex;flex-direction:column;gap:20px;overflow-y:auto}
+  #panel.open{transform:translateX(0)}
+  .ptop{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .ey{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .ey .cdot{width:7px;height:7px;border-radius:50%;flex:none}
+  .ey .cname{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .pspan{font-size:10.5px;letter-spacing:.16em;color:var(--teal);margin-top:8px}
+  #panel h2{font-family:"Fraunces",serif;font-weight:360;font-size:clamp(24px,3.6vw,32px);line-height:1.06;margin:12px 0 0}
+  .hook{color:#c3cad9;font-size:13px;line-height:1.7;margin:0}
+  .close{background:none;border:1px solid var(--hair-strong);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:15px;flex:none;transition:.2s}
+  .close:hover{color:var(--ink);border-color:var(--ink);transform:rotate(90deg)}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+  .metrics .m{background:rgba(8,11,19,.6);padding:15px 15px 13px}
+  .metrics .v{font-family:"Fraunces",serif;font-size:23px;color:var(--amber);line-height:1.05;word-break:break-word}
+  .metrics .k{margin-top:7px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tags span{font-size:10.5px;letter-spacing:.05em;color:#aeb6c8;border:1px solid var(--hair);padding:5px 11px;border-radius:999px}
+  .role-foot{font-size:11px;line-height:1.6;color:var(--muted);border-left:1px solid var(--hair-strong);padding-left:13px}
+  .role-foot b{color:#c3cad9;font-weight:500}
+  .pacts{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-top:6px}
+  .pacts a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--ink);border:1px solid var(--hair-strong);padding:12px 15px;border-radius:10px;font-size:12px;letter-spacing:.04em;transition:.22s;cursor:pointer}
+  .pacts a:hover{border-color:var(--teal);color:var(--teal);transform:translateX(3px)}
+  .pacts a.primary{background:rgba(54,214,195,.08);border-color:rgba(54,214,195,.4)}
+  .sec-label{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+
+  /* ---- featured spotlight (center modal) ---- */
+  #spot{position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,52px);opacity:0;pointer-events:none;transition:opacity .5s ease}
+  #spot::before{content:"";position:absolute;inset:0;background:rgba(2,3,8,.66);backdrop-filter:blur(6px)}
+  #spot.on{opacity:1;pointer-events:auto}
+  #spot .card{position:relative;width:min(680px,100%);max-height:88vh;overflow-y:auto;background:linear-gradient(180deg,rgba(13,16,27,.96),rgba(8,10,18,.975));
+    border:1px solid var(--hair-strong);border-radius:20px;box-shadow:0 50px 160px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.04);
+    padding:clamp(26px,4vw,46px);transform:translateY(16px) scale(.985);transition:transform .55s cubic-bezier(.16,1,.3,1)}
+  #spot.on .card{transform:none}
+  .sp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+  .sp-kicker{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .sp-cname{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+  .sp-chip{font-size:9px;letter-spacing:.18em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid currentColor}
+  .sp-sub{margin:14px 0 0;font-size:11px;letter-spacing:.04em;color:#aeb6c8;line-height:1.5}
+  #spot h2{font-family:"Fraunces",serif;font-weight:360;font-size:clamp(28px,4.6vw,40px);line-height:1.03;margin:10px 0 0}
+  .sp-span{font-size:10.5px;letter-spacing:.16em;color:var(--teal);margin-top:10px}
+  .sp-hook{margin:16px 0 0;font-size:14px;line-height:1.6;color:#dbe0ec;font-style:italic;font-family:"Fraunces",serif}
+  .sp-writeup{margin:18px 0 0;font-size:12.5px;line-height:1.85;color:#bcc4d4}
+  .sp-pinned{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0 0}
+  .sp-pinned .pm{border:1px solid var(--hair-strong);border-radius:14px;padding:18px 18px 15px;background:rgba(54,214,195,.04)}
+  .sp-pinned .pv{font-family:"Fraunces",serif;font-size:30px;color:var(--amber);line-height:1}
+  .sp-pinned .pk{margin-top:9px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .sp-striplabel{margin:22px 0 10px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .sp-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}
+  .sp-strip .sc{flex:none;border:1px solid var(--hair);border-radius:11px;padding:11px 14px;background:rgba(8,11,19,.5);min-width:118px}
+  .sp-strip .sv{font-family:"Fraunces",serif;font-size:16px;color:var(--ink);line-height:1.1}
+  .sp-strip .sk{margin-top:6px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .sp-strip .st{display:inline-block;margin-top:7px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);opacity:.85}
+  .sp-sec{margin-top:24px}
+  .sp-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+  .sp-acts a{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);border:1px solid var(--hair-strong);padding:12px 18px;border-radius:10px;font-size:12px;letter-spacing:.04em;transition:.22s;cursor:pointer}
+  .sp-acts a:hover{border-color:var(--teal);color:var(--teal)}
+  .sp-acts a.primary{background:rgba(54,214,195,.08);border-color:rgba(54,214,195,.4)}
+
+  /* ---- README overlay ---- */
+  #readme{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,48px);opacity:0;pointer-events:none;transition:opacity .7s ease}
+  #readme::before{content:"";position:absolute;inset:0;background:rgba(3,4,9,.5);backdrop-filter:blur(7px)}
+  #readme.on{opacity:1;pointer-events:auto}
+  #readme .card{position:relative;width:min(500px,100%);background:linear-gradient(180deg,rgba(12,16,27,.92),rgba(7,9,17,.94));
+    border:1px solid var(--hair-strong);border-radius:18px;box-shadow:0 40px 140px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.04);
+    padding:clamp(22px,4vw,32px);transform:translateY(14px) scale(.99);transition:transform .7s cubic-bezier(.16,1,.3,1)}
+  #readme.on .card{transform:none}
+  #readme .kicker{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  #readme .kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px 2px rgba(54,214,195,.8)}
+  #readme .kicker span{font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted)}
+  #readme h1{font-family:"Fraunces",serif;font-weight:340;font-size:clamp(22px,3.6vw,28px);line-height:1.08;margin:0 0 8px}
+  #readme .lede{font-size:12.5px;line-height:1.6;color:#c3cad9;margin:0 0 18px;max-width:40ch}
+  #readme .lede strong{color:var(--ink);font-weight:500}
+  #readme .rd-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin:0 0 14px}
+  #readme .rd-item{display:flex;align-items:center;gap:11px;min-height:34px}
+  #readme .rd-stars{display:flex;align-items:center;justify-content:center;width:32px;flex:none}
+  #readme .rd-star{border-radius:50%;flex:none;box-shadow:0 0 10px currentColor}
+  #readme .rd-big{width:13px;height:13px}
+  #readme .rd-sm{width:8px;height:8px;opacity:.88}
+  #readme .rd-xs{width:6px;height:6px}
+  #readme .rd-exp{background:var(--exp);color:var(--exp)}
+  #readme .rd-proj{background:var(--proj);color:var(--proj)}
+  #readme .rd-skill{background:var(--skill);color:var(--skill)}
+  #readme .rd-label{font-size:11px;line-height:1.4;color:#aeb6c9}
+  #readme .rd-label b{display:block;color:var(--ink);font-weight:500;font-size:11.5px;margin-bottom:1px}
+  #readme .rd-tip{font-size:11px;line-height:1.5;color:var(--muted);padding:9px 11px;border-left:2px solid var(--teal);background:rgba(54,214,195,.06);border-radius:0 8px 8px 0;margin:0}
+  #readme .rd-tip b{color:#c3cad9;font-weight:500}
+  #readme .rd-ps{margin:14px 0 0;font-family:"Fraunces",Georgia,serif;font-style:italic;font-size:12.5px;color:#7e8699;letter-spacing:.01em}
+  #readme .actions{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--hair-strong)}
+  #readme .enter{display:inline-flex;align-items:center;gap:10px;font-family:inherit;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#04121a;background:var(--teal);border:0;border-radius:999px;padding:13px 26px;cursor:pointer;transition:.2s}
+  #readme .enter:hover{box-shadow:0 0 26px 0 rgba(54,214,195,.4);transform:translateY(-1px)}
+  #readme .dna{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--muted);cursor:pointer;user-select:none}
+  #readme .dna input{appearance:none;width:15px;height:15px;border:1px solid var(--hair-strong);border-radius:4px;cursor:pointer;position:relative;transition:.2s}
+  #readme .dna input:checked{background:var(--teal);border-color:var(--teal)}
+  #readme .dna input:checked::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#04121a;font-size:10px}
+
+  @media (max-width:560px){#role{display:none}#social{gap:13px}#controls{gap:15px}.sp-pinned{grid-template-columns:1fr}#readme .rd-legend{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){#panel,#spot,#readme,#readme .card,#spot .card{transition:none}}
+</style>
+</head>
+<body>
+  <canvas id="sky"></canvas>
+  <div id="scrim"></div>
+
+  <div id="thesisveil"></div>
+  <div id="thesis">
+    <div class="t">Software you can measure, trace, and ship.</div>
+    <div class="sub">A constellation of measurable work</div>
+  </div>
+
+  <div id="hint"><span class="pulse"></span> hover to trace links · drag to pull · click to open</div>
+  <div id="tip"><span class="nm"></span><span class="tier"></span></div>
+
+  <div class="hud" id="idblock">
+    <div class="eyebrow"><span class="dot"></span><span class="label">Software Engineer · LLM Systems · Full-Stack</span></div>
+    <h1 id="name">Aadhav Bharadwaj</h1>
+    <p id="role">CS &amp; Math @ CWRU. Production LLM infrastructure, hybrid RAG, eval pipelines, and shipped full-stack systems.</p>
+  </div>
+
+  <div class="hud" id="links">
+    <a id="resume" href="#" onclick="return false">Résumé
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+    <div id="social">
+      <a href="mailto:bharadwajaadhav@gmail.com">Email</a>
+      <a href="https://www.linkedin.com/in/aadhav-bharadwaj/" target="_blank" rel="noreferrer">LinkedIn</a>
+      <a href="https://github.com/Aadhavsb" target="_blank" rel="noreferrer">GitHub</a>
+    </div>
+  </div>
+
+  <div class="hud" id="legend">
+    <div class="head" onclick="document.getElementById('legend').classList.toggle('collapsed')">
+      <span class="chev">▼</span><span class="label">How to read</span>
+    </div>
+    <ul>
+      <li><span class="s" style="width:12px;height:12px;background:var(--exp);box-shadow:0 0 9px var(--exp)"></span> Featured experience (big)</li>
+      <li><span class="s" style="width:12px;height:12px;background:var(--proj);box-shadow:0 0 9px var(--proj)"></span> Featured project (big)</li>
+      <li><span class="s" style="width:8px;height:8px;background:var(--exp)"></span> Experience — not featured</li>
+      <li><span class="s" style="width:8px;height:8px;background:var(--proj)"></span> Project — gallery / lab</li>
+      <li><span class="s" style="width:6px;height:6px;background:var(--skill)"></span> Skill / tech (size = reach)</li>
+    </ul>
+  </div>
+
+  <div class="hud" id="controls">
+    <button id="readme-btn"><span class="q">?</span><span>Readme</span></button>
+    <button id="motion"><span class="ind"></span><span>Motion</span></button>
+  </div>
+
+  <aside id="panel" aria-hidden="true">
+    <div class="ptop">
+      <div>
+        <div class="ey"><span class="cdot" id="p-cdot"></span><span class="cname" id="p-cname"></span></div>
+        <div class="pspan mono" id="p-span"></div>
+        <h2 id="p-title"></h2>
+      </div>
+      <button class="close" id="p-close" aria-label="Close">✕</button>
+    </div>
+    <p class="hook" id="p-hook"></p>
+    <div id="p-metricwrap"><div class="sec-label">Signals</div><div class="metrics" id="p-metrics"></div></div>
+    <div id="p-tagwrap"><div class="sec-label" id="p-taglabel">Stack</div><div class="tags" id="p-tags"></div></div>
+    <div id="p-rolewrap" style="display:none"><div class="sec-label">Experience</div><div class="role-foot" id="p-rolefoot"></div></div>
+    <div class="pacts" id="p-acts"></div>
+  </aside>
+
+  <div id="spot" aria-hidden="true"><div class="card" id="spot-card"></div></div>
+
+  <div id="readme" aria-hidden="true">
+    <div class="card" role="dialog" aria-label="How to read this portfolio">
+      <div class="kicker"><span class="dot"></span><span>60-second guide</span></div>
+      <h1>Interactive portfolio — not a scroll page</h1>
+      <p class="lede">I'm <strong>Aadhav Bharadwaj</strong> (CS &amp; Math, CWRU). Each star is work I've shipped — internships, projects, and the tech behind them. <strong>Size</strong> = how central; <strong>color</strong> = what kind.</p>
+
+      <div class="rd-legend" aria-label="Star legend">
+        <div class="rd-item">
+          <div class="rd-stars"><span class="rd-star rd-big rd-exp" aria-hidden="true"></span></div>
+          <div class="rd-label"><b>Large · yellow</b>Featured internship or role</div>
+        </div>
+        <div class="rd-item">
+          <div class="rd-stars"><span class="rd-star rd-big rd-proj" aria-hidden="true"></span></div>
+          <div class="rd-label"><b>Large · purple</b>Featured project (flagship builds)</div>
+        </div>
+        <div class="rd-item">
+          <div class="rd-stars"><span class="rd-star rd-sm rd-exp" aria-hidden="true"></span></div>
+          <div class="rd-label"><b>Small · yellow</b>Experience — not featured</div>
+        </div>
+        <div class="rd-item">
+          <div class="rd-stars"><span class="rd-star rd-sm rd-proj" aria-hidden="true"></span></div>
+          <div class="rd-label"><b>Small · purple</b>More projects &amp; research</div>
+        </div>
+        <div class="rd-item">
+          <div class="rd-stars"><span class="rd-star rd-xs rd-skill" aria-hidden="true"></span></div>
+          <div class="rd-label"><b>Red specks</b>Skills &amp; tools (hover the graph)</div>
+        </div>
+      </div>
+
+      <p class="rd-tip"><b>Try this:</b> click a large star for the full story (metrics + stack). Hover any star to see what connects. Résumé &amp; LinkedIn — top right.</p>
+
+      <div class="actions">
+        <button class="enter" id="rd-enter">Explore the map
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <label class="dna"><input type="checkbox" id="rd-dna" /> Don't show again</label>
+      </div>
+      <p class="rd-ps">ps — bored? grab a star and pull the whole map around.</p>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ============================================================
+  //  CONSTELLATION LAYOUT (aesthetic; ids match site.json)
+  // ============================================================
+  const CONST = {
+    instrument:{name:"The Instrument", color:"#9bb8ff", c:[.80,.28]},
+    presence:  {name:"The Presence",   color:"#7ee0d0", c:[.54,.50]},
+    arena:     {name:"The Arena",      color:"#c2a6ff", c:[.32,.24]},
+    platform:  {name:"The Platform",   color:"#f3b14e", c:[.30,.76]},
+    shelf:     {name:"The Shelf",      color:"#fde4b8", c:[.13,.50]},
+    lab:       {name:"The Lab",        color:"#bcd0ff", c:[.84,.80]}
+  };
+  const COL = { project:"#a78bfa", experience:"#ffcf7a", skill:"#ff7e60" };
+  // structural project↔project edges (constellation internal)
+  const STRUCT = [
+    ["blackbox-qa","abeyon-llm"], ["ml-research","knowledge-distillation-lab"],
+    ["inventory360","palate"], ["palate","brickd-up"], ["brickd-up","expressink"], ["expressink","inventory360"]
+  ];
+
+  const rand=(a,b)=>a+Math.random()*(b-a);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const hexToRgb=h=>{const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255];};
+
+  // ============================================================
+  //  STATE
+  // ============================================================
+  const cv=document.getElementById('sky'), ctx=cv.getContext('2d',{alpha:false, desynchronized:true});
+  let W=0,H=0,DPR=1,CW=0,CH=0,area=0;
+  let bgStars=[], neb=null, grainTiles=[], grainPats=[], gi=0, vignette=null, bgGrad=null;
+  let sprites=[], spikeSprite=null, meteors=[], nextMeteor=4, lastT=0;
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let motionOn=!reduce;
+
+  let DATA=null, NODES=[], NMAP={}, EDGES=[], ADJ={}, ROLE={}, ROLE_STAR={}, TS={featured:1.45,gallery:1.0,labs:0.92};
+  let ready=false;
+
+  // ============================================================
+  //  DECORATIVE SKY
+  // ============================================================
+  const STELLAR=[[[155,184,255],.10],[[202,216,255],.18],[[248,247,255],.32],[[252,243,210],.20],[[255,214,160],.12],[[255,170,140],.08]];
+  function pickStellarIdx(){let r=Math.random(),acc=0;for(let i=0;i<STELLAR.length;i++){acc+=STELLAR[i][1];if(r<=acc)return i;}return 2;}
+  function makeSprite(rgb,spike){
+    const S=64,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d');const k=S/2,[r,gg,b]=rgb;
+    const rad=g.createRadialGradient(k,k,0,k,k,k);
+    rad.addColorStop(0,'rgba(255,255,255,1)');rad.addColorStop(0.15,`rgba(${r},${gg},${b},0.95)`);
+    rad.addColorStop(0.4,`rgba(${r},${gg},${b},0.26)`);rad.addColorStop(1,`rgba(${r},${gg},${b},0)`);
+    g.fillStyle=rad;g.beginPath();g.arc(k,k,k,0,7);g.fill();
+    if(spike){g.globalCompositeOperation='lighter';g.strokeStyle=`rgba(${r},${gg},${b},0.5)`;g.lineWidth=1.1;
+      g.beginPath();g.moveTo(2,k);g.lineTo(S-2,k);g.moveTo(k,2);g.lineTo(k,S-2);g.stroke();}
+    return c;
+  }
+  function buildSprites(){sprites=STELLAR.map(([rgb])=>makeSprite(rgb,false));spikeSprite=makeSprite([248,247,255],true);}
+  function buildBg(){
+    bgStars=[];const count=clamp(Math.round(area/1100),900,3200);
+    for(let i=0;i<count;i++){const depth=Math.random();const r=rand(.35,1.25)*(0.6+depth)*DPR,spike=Math.random()<0.035;
+      bgStars.push({x:Math.random()*W,y:Math.random()*H,ci:pickStellarIdx(),size:r*(spike?12:6),
+        base:rand(.22,.9)*(0.4+depth*0.7),tw:rand(.6,2.4),ph:rand(0,Math.PI*2),depth,spike});}
+  }
+  function buildNebula(){
+    neb=document.createElement('canvas');neb.width=W;neb.height=H;const g=neb.getContext('2d');g.globalCompositeOperation='lighter';
+    const band=[[54,214,195],[120,108,200],[206,120,150],[80,120,210]];const cx=W*0.62,cy=H*0.30,ang=-0.62,N=Math.round(area/30000)+16;
+    for(let i=0;i<N;i++){const t=rand(-1,1);
+      const px=cx+Math.cos(ang)*t*W*0.7+rand(-1,1)*W*0.10,py=cy+Math.sin(ang)*t*W*0.7+rand(-1,1)*H*0.16;
+      const rad=rand(W*0.06,W*0.18),col=band[(Math.random()*band.length)|0],a=rand(.008,.035);
+      const rg=g.createRadialGradient(px,py,0,px,py,rad);
+      rg.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},${a})`);rg.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},0)`);
+      g.fillStyle=rg;g.beginPath();g.arc(px,py,rad,0,7);g.fill();}
+  }
+  function buildGrain(){grainTiles=[];const S=140;
+    for(let k=0;k<3;k++){const t=document.createElement('canvas');t.width=S;t.height=S;const c=t.getContext('2d');const img=c.createImageData(S,S);
+      for(let i=0;i<img.data.length;i+=4){const v=200+Math.random()*55;img.data[i]=img.data[i+1]=img.data[i+2]=v;img.data[i+3]=Math.random()*14;}
+      c.putImageData(img,0,0);grainTiles.push(t);}
+    grainPats=grainTiles.map(t=>ctx.createPattern(t,'repeat'));}
+  function buildVignette(){
+    vignette=document.createElement('canvas');vignette.width=W;vignette.height=H;const g=vignette.getContext('2d');
+    const vg=g.createRadialGradient(W*0.5,H*0.46,Math.min(W,H)*0.28,W*0.5,H*0.5,Math.max(W,H)*0.78);
+    vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(2,3,8,.7)');g.fillStyle=vg;g.fillRect(0,0,W,H);
+    bgGrad=ctx.createLinearGradient(0,0,W,H);bgGrad.addColorStop(0,'#05060d');bgGrad.addColorStop(.5,'#04050a');bgGrad.addColorStop(1,'#070510');
+  }
+
+  // ============================================================
+  //  MODEL (built from site.json)
+  // ============================================================
+  const conOf=p=> p.constellation || (p.tier==='gallery'?'shelf':(p.tier==='labs'?'lab':null));
+  function buildModel(d){
+    if(d.visual&&d.visual.tierScale) TS=d.visual.tierScale;
+    ROLE={}; ROLE_STAR={};
+    (d.experience||[]).forEach(r=>{ ROLE[r.id]=r; ROLE_STAR[r.id]=r.skyStarId||null; });
+    NODES=[]; NMAP={};
+    for(const p of d.projects){
+      const n={...p, kind:'proj', con:conOf(p), deg:0, color:COL[p.starKind]||COL.project};
+      NODES.push(n); NMAP[p.id]=n;
+    }
+    // experiences flagged onSky become their own (non-featured) yellow star
+    for(const e of (d.experience||[])){
+      if(!e.onSky || NMAP[e.id]) continue;
+      const n={ id:e.id, kind:'proj', tier:e.skyTier||'labs', con:e.constellation||'lab',
+        starKind:'experience', color:COL.experience, title:e.skyTitle||e.org,
+        subtitle:`${e.role}${e.location?' · '+e.location:''} · ${e.period}`,
+        hook:e.hook||(e.highlights&&e.highlights[0])||'', stack:e.stack||[], metrics:[],
+        links:{}, spanName:'experience.'+e.id, linkedExperience:e.id, deg:0 };
+      NODES.push(n); NMAP[e.id]=n;
+    }
+    for(const s of d.skills){
+      const tg=new Set();
+      for(const l of (s.links||[])){ if(NMAP[l]&&NMAP[l].kind==='proj') tg.add(l); else if(ROLE_STAR[l]) tg.add(ROLE_STAR[l]); }
+      if(!tg.size) continue;
+      const n={id:s.id, title:s.label, kind:'skill', con:null, to:[...tg], deg:0, writeup:s.writeup||'', color:COL.skill};
+      NODES.push(n); NMAP[s.id]=n;
+    }
+    // skill home constellation (for edge colour / intra-cross)
+    NODES.forEach(n=>{ if(n.kind!=='skill')return; const cnt={};
+      n.to.forEach(id=>{const c=NMAP[id]&&NMAP[id].con; if(c)cnt[c]=(cnt[c]||0)+1;});
+      let best=null,bv=0; for(const c in cnt) if(cnt[c]>bv){bv=cnt[c];best=c;} n.home=best;
+      n.span=new Set(n.to.map(id=>NMAP[id]&&NMAP[id].con).filter(Boolean)).size; });
+    // edges
+    EDGES=[];
+    const add=(a,b,type)=>{ if(NMAP[a]&&NMAP[b]){ EDGES.push({a:NMAP[a],b:NMAP[b],type}); NMAP[a].deg++; NMAP[b].deg++; } };
+    for(const [a,b] of STRUCT) add(a,b,'struct');
+    for(const e of (d.experience||[])){ if(e.onSky && e.linkedProjects) for(const p of e.linkedProjects) add(e.id,p,'struct'); }
+    for(const n of NODES) if(n.kind==='skill') for(const t of n.to) add(n.id,t,'skill');
+    const ec=n=>n.con||n.home||null;
+    EDGES.forEach(e=>{ const a=ec(e.a),b=ec(e.b); e.cross=!(a&&b&&a===b); });
+    EDGES.ec=ec;
+    // adjacency
+    ADJ={}; NODES.forEach(n=>ADJ[n.id]=new Set([n.id]));
+    EDGES.forEach(e=>{ ADJ[e.a.id].add(e.b.id); ADJ[e.b.id].add(e.a.id); });
+    // sizes, hubs, buzz
+    NODES.forEach(n=>{
+      n.r = n.kind==='proj' ? 8*(TS[n.tier]||1)+Math.sqrt(n.deg)*0.9 : 2.6+Math.sqrt(n.deg)*1.5;
+      n.hub = n.kind==='skill' && (n.deg>=4 || (n.deg>=3 && n.span>=2));
+      n.labelAlways = n.kind==='proj';
+      n.spike = n.tier==='featured';
+      n.bzp=rand(0,6.283); n.bzp2=rand(0,6.283); n.bzs=rand(0.45,0.9); n.bzs2=rand(0.4,0.85); n.rx=0; n.ry=0;
+    });
+  }
+  const ECOF=n=>n.con||n.home||null;
+
+  // ============================================================
+  //  PHYSICS
+  // ============================================================
+  const SIM={alpha:0.9, alphaMin:0.003, alphaDecay:0.018, velocityDecay:0.62,
+             projCenterK:0.075, freeCenterK:0.005, chargeK:7200, chargeMax:3.7, collidePad:18};
+  let dragNode=null;
+  function conCenter(con){const c=CONST[con].c;return[c[0]*CW,c[1]*CH];}
+  function linkDist(e){ const sk=(e.a.kind==='skill'||e.b.kind==='skill'); return (sk?82:132)+e.a.r+e.b.r; }
+  function place(){
+    for(const n of NODES){
+      let bx,by;
+      if(n.con){const c=conCenter(n.con);bx=c[0];by=c[1];}
+      else if(n.to){let sx=0,sy=0,k=0;for(const id of n.to){const m=NMAP[id];if(m&&m.con){const c=conCenter(m.con);sx+=c[0];sy+=c[1];k++;}}bx=k?sx/k:CW/2;by=k?sy/k:CH/2;}
+      else {bx=CW/2;by=CH/2;}
+      n.x=bx+rand(-1,1)*CW*0.05;n.y=by+rand(-1,1)*CH*0.05;n.vx=0;n.vy=0;n.fx=null;n.fy=null;
+    }
+  }
+  function reheat(v){ SIM.alpha=Math.max(SIM.alpha,v); }
+  function tick(){
+    let a=SIM.alpha;
+    if(a<SIM.alphaMin && !dragNode) return;
+    a=Math.max(a, dragNode?0.25:a);
+    for(const n of NODES){ if(n.fx!=null)continue;
+      if(n.con){const c=conCenter(n.con);n.vx+=(c[0]-n.x)*SIM.projCenterK*a;n.vy+=(c[1]-n.y)*SIM.projCenterK*a;}
+      else {n.vx+=(CW*0.5-n.x)*SIM.freeCenterK*a;n.vy+=(CH*0.5-n.y)*SIM.freeCenterK*a;} }
+    for(const e of EDGES){ let dx=e.b.x-e.a.x,dy=e.b.y-e.a.y,d=Math.hypot(dx,dy)||1; const L=linkDist(e),st=e.type==='struct'?0.18:0.1;
+      const f=((d-L)/d)*st*a; dx*=f;dy*=f; if(e.a.fx==null){e.a.vx+=dx*0.5;e.a.vy+=dy*0.5;} if(e.b.fx==null){e.b.vx-=dx*0.5;e.b.vy-=dy*0.5;} }
+    for(let i=0;i<NODES.length;i++)for(let j=i+1;j<NODES.length;j++){const A=NODES[i],B=NODES[j];
+      let dx=A.x-B.x,dy=A.y-B.y,d2=dx*dx+dy*dy+0.01,d=Math.sqrt(d2);let f=Math.min(SIM.chargeK/d2,SIM.chargeMax)*a,ux=dx/d*f,uy=dy/d*f;
+      if(A.fx==null){A.vx+=ux;A.vy+=uy;} if(B.fx==null){B.vx-=ux;B.vy-=uy;}}
+    for(const n of NODES){ if(n.fx!=null){n.x=n.fx;n.y=n.fy;n.vx=0;n.vy=0;continue;} n.vx*=SIM.velocityDecay;n.vy*=SIM.velocityDecay;n.x+=n.vx;n.y+=n.vy; }
+    for(let k=0;k<2;k++)for(let i=0;i<NODES.length;i++)for(let j=i+1;j<NODES.length;j++){const A=NODES[i],B=NODES[j],minD=A.r+B.r+SIM.collidePad;
+      let dx=B.x-A.x,dy=B.y-A.y,d=Math.hypot(dx,dy)||1;if(d<minD){const p=((minD-d)/d)*0.5,ox=dx*p,oy=dy*p;
+        if(A.fx==null){A.x-=ox;A.y-=oy;} if(B.fx==null){B.x+=ox;B.y+=oy;}}}
+    for(const n of NODES){const m=8+n.r;n.x=clamp(n.x,m,CW-m);n.y=clamp(n.y,m,CH-m);}
+    if(!dragNode) SIM.alpha += (0-SIM.alpha)*SIM.alphaDecay;
+  }
+
+  // ============================================================
+  //  DRAW
+  // ============================================================
+  function conColorRGB(con){return hexToRgb(con?CONST[con].color:"#ff7e60");}
+  let hot=null, litSet=null, litAmt=0;
+  function isLit(n){ return !litSet || litSet.has(n.id); }
+
+  function drawConstLabels(){
+    ctx.save(); ctx.globalCompositeOperation='source-over'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    for(const key in CONST){
+      const members=NODES.filter(n=>n.con===key && n.kind==='proj');
+      if(!members.length)continue;
+      let sx=0; members.forEach(m=>{sx+=m.rx;}); sx/=members.length;
+      const minY=Math.min(...members.map(m=>m.ry-m.r));
+      const lx=sx*DPR, ly=(minY-30)*DPR;
+      const isHotCon = hot && hot.con===key;
+      const dim = isHotCon ? 0.42 : (0.30 - 0.16*litAmt);
+      ctx.font=`340 ${15*DPR}px "Fraunces", Georgia, serif`;
+      ctx.fillStyle=`rgba(233,236,245,${dim})`; ctx.shadowColor='rgba(2,3,8,.8)'; ctx.shadowBlur=10*DPR;
+      ctx.fillText(CONST[key].name.toUpperCase(), lx, ly); ctx.shadowBlur=0;
+    }
+    ctx.restore();
+  }
+  function drawEdges(){
+    for(const e of EDGES){
+      const ax=e.a.rx*DPR, ay=e.a.ry*DPR, bx=e.b.rx*DPR, by=e.b.ry*DPR;
+      const bothLit = litSet ? (litSet.has(e.a.id) && litSet.has(e.b.id)) : false;
+      const rest = e.cross ? 0.16 : 0.46;
+      const target = bothLit ? (e.cross?0.5:0.82) : 0.05;
+      const alpha = rest + (target-rest)*litAmt;
+      if(alpha<=0.012) continue;
+      const ca=conColorRGB(ECOF(e.a)), cb=conColorRGB(ECOF(e.b));
+      const grd=ctx.createLinearGradient(ax,ay,bx,by);
+      grd.addColorStop(0,`rgba(${ca[0]},${ca[1]},${ca[2]},${alpha})`);
+      grd.addColorStop(1,`rgba(${cb[0]},${cb[1]},${cb[2]},${alpha})`);
+      ctx.strokeStyle=grd; ctx.lineWidth=DPR*((e.cross?0.85:1.15)+(bothLit?0.9*litAmt:0));
+      if(bothLit && litAmt>0.03){ ctx.shadowColor=`rgba(${ca[0]},${ca[1]},${ca[2]},0.85)`; ctx.shadowBlur=8*DPR*litAmt; }
+      ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke(); ctx.shadowBlur=0;
+    }
+  }
+  function drawNode(n,t){
+    const lit=isLit(n), hov=(n===hot);
+    const x=n.rx*DPR, y=n.ry*DPR; const [r,g,b]=hexToRgb(n.color);
+    const tw = motionOn ? (0.8+0.2*Math.sin(t*(n.kind==='skill'?1.7:1.1)+n.x*0.7)) : 1;
+    const pulse = (n.tier==='featured'&&motionOn) ? (1+0.07*Math.sin(t*1.4+n.bzp)) : 1;
+    const dim = lit ? 1 : (1 - litAmt*0.6);
+    const glowBoost = lit ? (1 + 0.45*litAmt) : 1;
+    const R=n.r*DPR*(hov?1.22:1)*tw;
+    const glow=R*(hov?4.2:2.6)*glowBoost*pulse;
+    const ga=(hov?.55:(n.tier==='featured'?.4:.28))*dim*(lit?(1+0.3*litAmt):1)*pulse;
+    const rg=ctx.createRadialGradient(x,y,0,x,y,glow);
+    rg.addColorStop(0,`rgba(${r},${g},${b},${ga})`);rg.addColorStop(.4,`rgba(${r},${g},${b},${ga*0.3})`);rg.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(x,y,glow,0,7); ctx.fill();
+    if((n.spike || n.deg>=5 || hov) && lit){
+      ctx.strokeStyle=`rgba(${r},${g},${b},${(hov?.5:.26)*dim})`; ctx.lineWidth=DPR*0.7; const L=glow*0.95;
+      ctx.beginPath(); ctx.moveTo(x-L,y);ctx.lineTo(x+L,y);ctx.moveTo(x,y-L);ctx.lineTo(x,y+L); ctx.stroke();
+    }
+    ctx.fillStyle=`rgba(${r},${g},${b},${0.96*dim})`; ctx.beginPath(); ctx.arc(x,y,R*0.95,0,7); ctx.fill();
+    ctx.fillStyle=`rgba(255,255,255,${(hov?1:.9)*dim})`; ctx.beginPath(); ctx.arc(x,y,R*0.42,0,7); ctx.fill();
+  }
+  function drawLabel(n){
+    const lit=isLit(n), hov=(n===hot);
+    const always = n.labelAlways || n.hub;
+    const baseA = n.tier==='featured'?0.8:(n.hub?0.62:0.5);
+    let alpha;
+    if(hov) alpha=1;
+    else if(always){ alpha = litSet ? (lit ? Math.max(baseA,0.85) : baseA*(1-0.6*litAmt)) : baseA; }
+    else { if(!litSet || !lit) return; alpha = 0.85*litAmt; }
+    if(hot && n!==hot){ const dd=Math.hypot(n.rx-hot.rx,n.ry-hot.ry); if(dd < hot.r+n.r+76) alpha *= (1-litAmt); }
+    if(alpha<=0.05) return;
+    const x=n.rx*DPR, y=(n.ry+n.r+7)*DPR;
+    ctx.save(); ctx.globalCompositeOperation='source-over';
+    const size=(n.tier==='featured'?12.5:n.kind==='skill'?(n.hub?10.5:9.5):11);
+    ctx.font=`340 ${size*DPR}px "Fraunces", Georgia, serif`; ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.shadowColor='rgba(2,3,8,.92)'; ctx.shadowBlur=7*DPR; ctx.fillStyle=`rgba(233,236,245,${alpha})`;
+    ctx.fillText(n.title, x, y); ctx.restore();
+  }
+
+  // ============================================================
+  //  INTERACTION
+  // ============================================================
+  let dragMoved=false, downX=0, downY=0;
+  const tip=document.getElementById('tip');
+  function nodeAt(cx,cy){ let best=null,bd=1e9; for(const n of NODES){const d=Math.hypot(cx-n.x,cy-n.y);const hit=Math.max(n.r+7,11);if(d<hit&&d<bd){best=n;bd=d;}} return best; }
+  function setHot(n){
+    if(n===hot)return; hot=n;
+    if(n){ litSet=new Set(ADJ[n.id]); if(n.con) NODES.forEach(m=>{ if(m.con===n.con) litSet.add(m.id); }); }
+    cv.style.cursor=n?(dragNode?'grabbing':'grab'):'default';
+    if(n && !n.labelAlways){
+      tip.querySelector('.nm').textContent=n.title;
+      tip.querySelector('.tier').textContent = n.kind==='skill' ? (n.deg+' connections') : (n.con?CONST[n.con].name:'');
+      tip.style.left=n.x+'px'; tip.style.top=n.y+'px'; tip.style.opacity='1';
+    } else tip.style.opacity='0';
+  }
+  let tmx=0,tmy=0,pmx=0,pmy=0;
+  cv.addEventListener('pointermove',e=>{
+    const cx=e.clientX,cy=e.clientY;
+    if(dragNode){ dragNode.fx=cx; dragNode.fy=cy; reheat(0.35); if(Math.hypot(cx-downX,cy-downY)>4)dragMoved=true; tip.style.opacity='0'; return; }
+    tmx=(cx/innerWidth-.5); tmy=(cy/innerHeight-.5);
+    setHot(nodeAt(cx,cy));
+    if(hot && !hot.labelAlways){ tip.style.left=hot.x+'px'; tip.style.top=hot.y+'px'; }
+  });
+  cv.addEventListener('pointerdown',e=>{
+    if(!ready)return; const cx=e.clientX,cy=e.clientY,n=nodeAt(cx,cy);
+    if(n && !reduce){ dragNode=n;dragMoved=false;downX=cx;downY=cy;n.fx=n.x;n.fy=n.y;reheat(0.5);cv.style.cursor='grabbing';cv.setPointerCapture(e.pointerId);dismissThesis(); }
+    else if(n && reduce){ openFor(n); }
+  });
+  cv.addEventListener('pointerup',e=>{
+    if(dragNode){ const n=dragNode;dragNode=null;n.fx=null;n.fy=null;reheat(0.28);cv.style.cursor=nodeAt(e.clientX,e.clientY)?'grab':'default'; if(!dragMoved) openFor(n); }
+  });
+  cv.addEventListener('pointercancel',()=>{ if(dragNode){dragNode.fx=null;dragNode.fy=null;dragNode=null;reheat(0.5);} });
+  cv.addEventListener('pointerleave',()=>{ if(!dragNode) setHot(null); });
+  function openFor(n){ if(n.kind==='proj' && n.tier==='featured') openSpotlight(n); else openPanel(n); }
+
+  // ============================================================
+  //  SPOTLIGHT (featured)
+  // ============================================================
+  const spot=document.getElementById('spot'), spotCard=document.getElementById('spot-card');
+  function metricCard(m){ return `<div class="pm"><div class="pv">${m.value}</div><div class="pk">${m.label}</div></div>`; }
+  function stripCard(m){ return `<div class="sc"><div class="sv">${m.value}</div><div class="sk">${m.label}</div>${m.tag?`<span class="st">${m.tag}</span>`:''}</div>`; }
+  function actLink(label,url,cls){ const ext=/^https?:/.test(url); return `<a class="${cls||''}" href="${url}" ${ext?'target="_blank" rel="noreferrer"':'onclick="return false"'}>${label}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>`; }
+  function linkList(n){ const a=[]; if(n.caseStudyPath)a.push(['Open case study',n.caseStudyPath,'primary']); if(n.links){ if(n.links.github)a.push(['GitHub',n.links.github,'']); if(n.links.demo)a.push(['Live demo',n.links.demo,'']);} return a; }
+  function openSpotlight(n){
+    const con=n.con?CONST[n.con]:null;
+    const pinned=(n.metricsPinned&&n.metricsPinned.length)?n.metricsPinned:(n.metrics||[]).slice(0,2);
+    const scroll=(n.metricsScroll&&n.metricsScroll.length)?n.metricsScroll:(n.metrics||[]).slice(2);
+    const kindLabel=n.starKind==='experience'?'Experience':'Project';
+    const acts=linkList(n);
+    spotCard.innerHTML=`
+      <div class="sp-top"><div>
+        <div class="sp-kicker">
+          ${con?`<span class="sp-cname"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${con.color};box-shadow:0 0 8px ${con.color};margin-right:7px;vertical-align:middle"></span>${con.name}</span>`:''}
+          <span class="sp-chip" style="color:${n.color}">${kindLabel}</span>
+        </div>
+        ${n.subtitle?`<div class="sp-sub">${n.subtitle}</div>`:''}
+        <h2>${n.title}</h2>
+        <div class="sp-span mono">// ${n.spanName||n.id}</div>
+      </div><button class="close" id="sp-close" aria-label="Close">✕</button></div>
+      ${n.hook?`<p class="sp-hook">${n.hook}</p>`:''}
+      ${n.writeup?`<p class="sp-writeup">${n.writeup}</p>`:''}
+      ${pinned.length?`<div class="sp-pinned">${pinned.map(metricCard).join('')}</div>`:''}
+      ${scroll.length?`<div class="sp-striplabel">More signals →</div><div class="sp-strip">${scroll.map(stripCard).join('')}</div>`:''}
+      ${n.stack&&n.stack.length?`<div class="sp-sec"><div class="sec-label">Stack</div><div class="tags">${n.stack.map(s=>`<span>${s}</span>`).join('')}</div></div>`:''}
+      ${acts.length?`<div class="sp-acts">${acts.map(a=>actLink(a[0],a[1],a[2]==='primary'?'primary':'')).join('')}</div>`:''}
+    `;
+    document.getElementById('sp-close').onclick=closeSpot;
+    spot.classList.add('on'); spot.setAttribute('aria-hidden','false'); dismissThesis();
+  }
+  function closeSpot(){ spot.classList.remove('on'); spot.setAttribute('aria-hidden','true'); }
+  spot.addEventListener('click',e=>{ if(e.target===spot) closeSpot(); });
+
+  // ============================================================
+  //  SIDE PANEL (gallery · lab · skill)
+  // ============================================================
+  const panel=document.getElementById('panel'), scrim=document.getElementById('scrim'); const $=id=>document.getElementById(id);
+  const show=(el,on)=>{el.style.display=on?'':'none';};
+  function openPanel(n){
+    const con=n.con?CONST[n.con]:{name:n.kind==='skill'?'Skill / tech':'',color:n.color};
+    $('p-cdot').style.background=con.color; $('p-cdot').style.boxShadow=`0 0 8px ${con.color}`;
+    $('p-cname').textContent=con.name||''; $('p-title').textContent=n.title;
+    if(n.kind==='skill'){
+      $('p-span').textContent='// skill.'+n.id;
+      $('p-hook').textContent=n.writeup||`Connects ${n.deg} systems.`;
+      show($('p-metricwrap'),false);
+      $('p-taglabel').textContent='Used in';
+      $('p-tags').innerHTML=n.to.map(id=>`<span>${NMAP[id]?NMAP[id].title:id}</span>`).join('');
+      show($('p-tagwrap'),true); show($('p-rolewrap'),false); $('p-acts').innerHTML='';
+    } else {
+      $('p-span').textContent='// '+(n.spanName||n.id);
+      $('p-hook').textContent=n.hook||'';
+      $('p-metrics').innerHTML=(n.metrics||[]).map(m=>`<div class="m"><div class="v">${m.value}</div><div class="k">${m.label}</div></div>`).join('');
+      show($('p-metricwrap'),(n.metrics||[]).length>0);
+      $('p-taglabel').textContent='Stack'; $('p-tags').innerHTML=(n.stack||[]).map(s=>`<span>${s}</span>`).join(''); show($('p-tagwrap'),true);
+      const r=n.linkedExperience&&ROLE[n.linkedExperience];
+      if(r){ $('p-rolefoot').innerHTML=`<b>${r.role}</b> · ${r.org}<br>${r.period}`; show($('p-rolewrap'),true); } else show($('p-rolewrap'),false);
+      const acts=linkList(n); $('p-acts').innerHTML=acts.map(a=>actLink(a[0],a[1],a[2]==='primary'?'primary':'')).join('');
+    }
+    panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); scrim.classList.add('on'); dismissThesis();
+  }
+  function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); scrim.classList.remove('on'); }
+  $('p-close').onclick=closePanel; scrim.onclick=closePanel;
+
+  // ============================================================
+  //  README / THESIS / MOTION / KEYS
+  // ============================================================
+  const readme=$('readme'), RKEY='portfolio.readme.dismissed';
+  const forceReadme=new URLSearchParams(location.search).get('readme')==='1';
+  function showReadme(){ readme.classList.add('on'); readme.setAttribute('aria-hidden','false'); }
+  function hideReadme(){ readme.classList.remove('on'); readme.setAttribute('aria-hidden','true');
+    if($('rd-dna').checked){try{localStorage.setItem(RKEY,'1');}catch(e){}} startThesis(); }
+  $('rd-enter').onclick=hideReadme; $('readme-btn').onclick=()=>{ $('rd-dna').checked=false; showReadme(); };
+  readme.addEventListener('click',e=>{ if(e.target===readme) hideReadme(); });
+
+  const thesis=$('thesis'), veil=$('thesisveil'), hint=$('hint'); let thesisDone=false, thesisStarted=false;
+  function dismissThesis(){ if(!thesisStarted||thesisDone)return; thesisDone=true; thesis.style.opacity='0'; veil.classList.remove('on'); }
+  function startThesis(){ if(thesisStarted)return; thesisStarted=true;
+    setTimeout(()=>{thesis.style.opacity='1'; veil.classList.add('on');},200);
+    setTimeout(()=>{dismissThesis();hint.style.opacity='1';},4800);
+    setTimeout(()=>hint.style.opacity='0',11000); }
+
+  const motionBtn=$('motion'); if(!motionOn)motionBtn.classList.add('off');
+  motionBtn.onclick=()=>{ motionOn=!motionOn; motionBtn.classList.toggle('off',!motionOn); };
+  addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(readme.classList.contains('on'))hideReadme(); else if(spot.classList.contains('on'))closeSpot(); else if(panel.classList.contains('open'))closePanel(); }});
+
+  // ============================================================
+  //  RESIZE / LOOP / BOOT
+  // ============================================================
+  function resize(first){
+    DPR=Math.min(window.devicePixelRatio||1,2); CW=innerWidth; CH=innerHeight;
+    W=cv.width=Math.floor(innerWidth*DPR); H=cv.height=Math.floor(innerHeight*DPR);
+    cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; area=innerWidth*innerHeight;
+    if(!sprites.length) buildSprites();
+    buildBg(); buildNebula(); buildVignette(); if(!grainTiles.length)buildGrain();
+    if(ready){ if(first) place(); reheat(first?0.9:0.4); }
+  }
+  let t0=performance.now();
+  function frame(now){
+    const t=(now-t0)/1000;
+    pmx+=(tmx-pmx)*0.04; pmy+=(tmy-pmy)*0.04;
+    const drift=motionOn?Math.sin(t*0.03)*W*0.01:0;
+    const ox=(pmx*16*DPR)+drift, oy=(pmy*12*DPR)+(motionOn?Math.cos(t*0.025)*H*0.006:0);
+
+    ctx.fillStyle=bgGrad; ctx.fillRect(0,0,W,H);
+    if(neb){ctx.globalAlpha=1;ctx.drawImage(neb,ox*0.4,oy*0.4);}
+
+    ctx.globalCompositeOperation='lighter';
+    for(const s of bgStars){
+      const tw=motionOn?(0.6+0.4*Math.sin(t*s.tw+s.ph)):0.85;
+      ctx.globalAlpha=clamp(s.base*tw,0,1);
+      const x=s.x+ox*s.depth-s.size/2, y=s.y+oy*s.depth-s.size/2;
+      ctx.drawImage(s.spike?spikeSprite:sprites[s.ci], x, y, s.size, s.size);
+    }
+    ctx.globalAlpha=1;
+
+    const dt=Math.min(t-lastT,0.05); lastT=t;
+    if(motionOn && !reduce){
+      if(t>nextMeteor){ nextMeteor=t+9+Math.random()*16; const ang=Math.PI*(0.62+Math.random()*0.26); const sp=(380+Math.random()*260)*DPR;
+        meteors.push({x:Math.random()*W*0.9+W*0.05,y:Math.random()*H*0.35,nx:Math.cos(ang),ny:Math.sin(ang),sp,len:(90+Math.random()*120)*DPR,age:0,life:0.9+Math.random()*0.7}); }
+      for(const m of meteors){ m.age+=dt; m.x+=m.nx*m.sp*dt; m.y+=m.ny*m.sp*dt; }
+      meteors=meteors.filter(m=>m.age<m.life && m.x<W+200 && m.y<H+200);
+      for(const m of meteors){ const a=Math.sin(Math.PI*clamp(m.age/m.life,0,1))*0.18; if(a<=0.004)continue;
+        const tx=m.x-m.nx*m.len,ty=m.y-m.ny*m.len; const g=ctx.createLinearGradient(m.x,m.y,tx,ty);
+        g.addColorStop(0,`rgba(214,230,255,${a})`); g.addColorStop(1,'rgba(214,230,255,0)');
+        ctx.strokeStyle=g; ctx.lineWidth=DPR*1.1; ctx.beginPath(); ctx.moveTo(m.x,m.y); ctx.lineTo(tx,ty); ctx.stroke(); }
+    }
+
+    if(ready){
+      litAmt += ((hot?1:0)-litAmt)*0.09;
+      if(!hot && litAmt<0.02 && litSet) litSet=null;
+      tick();
+      const BUZZ=(motionOn&&!reduce)?3.0:0;
+      for(const n of NODES){ if(BUZZ && n.fx==null){ n.rx=n.x+Math.sin(t*n.bzs+n.bzp)*BUZZ; n.ry=n.y+Math.cos(t*n.bzs2+n.bzp2)*BUZZ; } else { n.rx=n.x; n.ry=n.y; } }
+      ctx.globalCompositeOperation='source-over';
+      drawConstLabels(); drawEdges();
+      ctx.globalCompositeOperation='lighter';
+      for(const n of NODES) if(n.kind==='skill') drawNode(n,t);
+      for(const n of NODES) if(n.kind!=='skill' && n.tier!=='featured') drawNode(n,t);
+      for(const n of NODES) if(n.tier==='featured') drawNode(n,t);
+      ctx.globalCompositeOperation='source-over';
+      for(const n of NODES) drawLabel(n);
+    }
+
+    if(vignette) ctx.drawImage(vignette,0,0);
+    if(grainPats.length){ctx.globalAlpha=0.45;ctx.fillStyle=grainPats[(gi++>>1)%grainPats.length];ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
+    requestAnimationFrame(frame);
+  }
+
+  resize(false);
+  addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>resize(false),150);});
+  requestAnimationFrame(frame);
+
+  fetch('./site.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+    DATA=d; buildModel(d); CW=innerWidth; CH=innerHeight; place();
+    if(reduce){ for(let i=0;i<520;i++) tick(); SIM.alpha=0; }
+    ready=true; reheat(0.9);
+    let dismissed=false; try{dismissed=!!localStorage.getItem(RKEY);}catch(e){}
+    if(forceReadme||!dismissed) setTimeout(showReadme,650); else startThesis();
+  }).catch(err=>{
+    console.error('site.json load failed',err);
+    const el=document.createElement('div');
+    el.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#8b93a7;font:13px monospace;text-align:center;padding:40px;z-index:90';
+    el.textContent='Could not load site.json — serve this folder over http (python3 -m http.server) rather than opening the file directly.';
+    document.body.appendChild(el);
+  });
+})();
+</script>
+</body>
+</html>
