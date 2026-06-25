@@ -10,7 +10,7 @@ body{font-family:var(--font-ibm-plex-mono),"IBM Plex Mono",ui-monospace,monospac
 a{color:inherit}
 
 /* ===== night sky home ===== */
-#sky{position:fixed;inset:0;display:block;width:100vw;height:100vh;touch-action:none}
+#sky{position:fixed;inset:0;z-index:0;display:block;width:100vw;height:100vh;touch-action:none}
 
 #scrim{position:fixed;inset:0;background:radial-gradient(120% 120% at 70% 50%,rgba(2,3,8,.2),rgba(2,3,8,.78));
   opacity:0;pointer-events:none;transition:opacity .5s ease;z-index:20}
@@ -29,6 +29,7 @@ a{color:inherit}
 #links{top:clamp(16px,3.2vw,40px);right:clamp(16px,3.2vw,44px);display:flex;flex-direction:column;align-items:flex-end;gap:13px;text-align:right}
 #links a{color:var(--ink);text-decoration:none;font-size:12px;letter-spacing:.05em;opacity:.82;transition:opacity .2s,color .2s;cursor:pointer}
 #links a:hover{opacity:1;color:var(--teal)}
+#social a.email-copied{color:var(--teal);opacity:1}
 #resume{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--hair-strong);padding:8px 14px;border-radius:999px;background:rgba(12,16,26,.5);backdrop-filter:blur(8px)}
 #resume:hover{border-color:var(--teal);color:var(--teal)}
 #social{display:flex;gap:16px}

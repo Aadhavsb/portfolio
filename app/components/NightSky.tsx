@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { trapFocus } from "@/lib/focus-trap";
@@ -12,6 +12,36 @@ import {
   setRoleFooter,
 } from "@/lib/sky-ui";
 import { bootNightSky } from "@/lib/night-sky-boot";
+
+function EmailLink({ email }: { email: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const onClick = useCallback(
+    async (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      try {
+        await navigator.clipboard.writeText(email);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      } catch {
+        window.location.href = `mailto:${email}`;
+      }
+    },
+    [email]
+  );
+
+  return (
+    <a
+      href={`mailto:${email}`}
+      title={email}
+      className={copied ? "email-copied" : undefined}
+      aria-label={copied ? "Email copied to clipboard" : `Email ${email}`}
+      onClick={onClick}
+    >
+      {copied ? "Copied!" : "Email"}
+    </a>
+  );
+}
 
 export default function NightSky() {
   useEffect(
@@ -53,7 +83,7 @@ export default function NightSky() {
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17 17 7M9 7h8v8" /></svg>
         </a>
         <div id="social">
-          <a href="mailto:bharadwajaadhav@gmail.com">Email</a>
+          <EmailLink email={site.meta.email} />
           <a href="https://www.linkedin.com/in/aadhav-bharadwaj/" target="_blank" rel="noreferrer">LinkedIn</a>
           <a href="https://github.com/Aadhavsb" target="_blank" rel="noreferrer">GitHub</a>
         </div>
