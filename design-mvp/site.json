@@ -1,0 +1,590 @@
+{
+  "meta": {
+    "name": "Aadhav S. Bharadwaj",
+    "title": "Aadhav Bharadwaj — LLM Systems & Full-Stack",
+    "description": "CS & Math @ CWRU. Production LLM infrastructure, hybrid RAG, eval pipelines, and shipped full-stack systems.",
+    "email": "bharadwajaadhav@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/aadhav-bharadwaj/",
+    "github": "https://github.com/Aadhavsb",
+    "resumePath": "/resume.pdf",
+    "thesis": "LLM systems you can trace and ship"
+  },
+  "visual": {
+    "starKind": {
+      "experience": {
+        "hex": "#ffcf7a",
+        "label": "Experience",
+        "note": "One yellow — internships and jobs on the sky"
+      },
+      "project": {
+        "hex": "#a78bfa",
+        "label": "Project",
+        "note": "One purple — repos and shipped systems (all project tiers share this hue)"
+      }
+    },
+    "tierScale": {
+      "featured": 1.45,
+      "gallery": 1.0,
+      "labs": 0.92
+    },
+    "rules": [
+      "Size = tier (featured big, gallery medium, lab small)",
+      "Color = starKind (yellow experience OR purple project) — not constellation hue",
+      "A featured internship is ONE star: big + yellow (not a yellow branch off a blue project node)",
+      "Gallery and lab stars use the same purple as featured projects, smaller radius only"
+    ]
+  },
+  "skills": [
+    {
+      "id": "python",
+      "label": "Python",
+      "links": ["blackbox-qa", "role-abeyon", "role-ta", "role-datta"],
+      "writeup": "Primary language across LLM agents, eval pipelines, research notebooks, and teaching tooling at CWRU. Powers Blackbox-QA's retrieval stack, Abeyon's parallel NDJSON batch jobs, and Python autograding utilities used in weekly labs for 100+ students."
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "links": ["arguably", "inventory360", "ai-kiosk"],
+      "writeup": "Typed front-end and API contracts for production web apps — kiosk UI, debate platform, and multi-site inventory tooling. Keeps large Next.js codebases maintainable with strict schemas at component and route boundaries."
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "links": ["arguably", "palate", "eaton"],
+      "writeup": "Runtime for real-time signaling, MERN services, and browser WebRTC clients across Arguably and internship platforms. Used wherever fast iteration on event-driven UI and Node backends mattered more than static typing."
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "links": ["role-abeyon"],
+      "writeup": "Enterprise service layer work during the Abeyon internship — retrieval fusion utilities, Elasticsearch integration, and batch generation controllers in existing Java codebases. Bridges Python eval tooling with production JVM services."
+    },
+    {
+      "id": "sql",
+      "label": "SQL",
+      "links": ["blackbox-qa", "abeyon-llm"],
+      "writeup": "Read-only SQL tool paths in Blackbox-QA and schema design for pgvector-backed retrieval stores. Also used for labeled eval sets, gold-set fixtures, and structured logging queries behind Langfuse dashboards."
+    },
+    {
+      "id": "r",
+      "label": "R",
+      "links": [],
+      "writeup": "Statistical analysis and coursework visualization during the CS & Math curriculum at CWRU. Supports data-heavy assignments rather than production portfolio systems."
+    },
+    {
+      "id": "rag",
+      "label": "RAG",
+      "links": ["blackbox-qa", "abeyon-llm", "ai-kiosk", "eaton", "role-abeyon", "role-eaton", "role-kiosk"],
+      "writeup": "Retrieval-augmented generation from internship gateways to personal eval harnesses — hybrid BM25 + dense fusion, Pinecone on the kiosk, and MERN vector search at Eaton. The through-line of the portfolio: measure recall, trace failures, ship fixes."
+    },
+    {
+      "id": "embeddings",
+      "label": "Embeddings",
+      "links": ["blackbox-qa", "abeyon-llm", "eaton"],
+      "writeup": "Dense retrieval arms in hybrid pipelines — embedding models behind pgvector indexes and Eaton's trainer search. Paired with BM25 and reciprocal rank fusion so sparse and semantic signals complement each other on labeled gold sets."
+    },
+    {
+      "id": "llm-as-judge",
+      "label": "LLM-as-Judge Evals",
+      "links": ["blackbox-qa", "abeyon-llm", "role-abeyon"],
+      "writeup": "Frozen gold sets scored by automated judges for citation match, answer quality, and stage-level RAG debugging. Ran 100-case WI benchmarks at Abeyon and CI-gated judge metrics on every Blackbox-QA pull request."
+    },
+    {
+      "id": "hybrid-retrieval",
+      "label": "Hybrid Retrieval (BM25 + RRF)",
+      "links": ["blackbox-qa", "abeyon-llm", "role-abeyon"],
+      "writeup": "BM25 plus dense retrieval fused with reciprocal rank fusion — the pattern that lifted Recall@40 to 0.887 and Recall@5 from 0.04 (BM25-only) to 0.88 on labeled sets. Standard approach across Abeyon production apps and the Blackbox-QA reference implementation."
+    },
+    {
+      "id": "pgvector",
+      "label": "pgvector",
+      "links": ["blackbox-qa", "abeyon-llm"],
+      "writeup": "Postgres vector extension backing deterministic retrieval evals and production-adjacent indexes. Blackbox-QA runs pgvector-backed Recall@5 regression gates on every PR so embedding drift is caught before merge."
+    },
+    {
+      "id": "pytorch",
+      "label": "PyTorch",
+      "links": ["ml-research", "knowledge-distillation-lab", "role-datta"],
+      "writeup": "Training and experimentation stack for transformer inference research at the Datta Research Lab — chunked decomposition, KV-cache analysis, and teacher–student distillation runs. Implements ResNet-18 and ViT-Tiny compression studies in the knowledge-distillation lab repos."
+    },
+    {
+      "id": "knowledge-distillation",
+      "label": "Knowledge Distillation",
+      "links": ["knowledge-distillation-lab", "ml-research", "role-datta"],
+      "writeup": "Teacher–student compression experiments comparing ResNet-18 and ViT-Tiny under distillation loss schedules at CWRU. Sits alongside pruning and chunked-decomposition work as part of the Lab constellation on the portfolio sky."
+    },
+    {
+      "id": "computer-vision",
+      "label": "Computer Vision",
+      "links": ["expressink"],
+      "writeup": "HackCWRU ExpressInk pipeline — vision models on children's drawings to support emotional-state screening. Shipped as a gallery-tier project; backend split across ExpressInk and ExpressInkBackend repos."
+    },
+    {
+      "id": "langfuse",
+      "label": "Langfuse",
+      "links": ["blackbox-qa", "abeyon-llm", "role-abeyon"],
+      "writeup": "Self-hosted Langfuse v3 for company-wide cost, token, and latency attribution across nine priced models. Instrumented production FastAPI gateways and Blackbox-QA spans so every retrieval and generation step is traceable in one UI."
+    },
+    {
+      "id": "vllm",
+      "label": "vLLM",
+      "links": ["abeyon-llm", "role-abeyon"],
+      "writeup": "On-prem inference behind the Abeyon LLM gateway before and during AWS Bedrock migration. Routed alongside Bedrock with OpenAI-compatible APIs and custom regex pricing in Langfuse."
+    },
+    {
+      "id": "bedrock",
+      "label": "AWS Bedrock",
+      "links": ["abeyon-llm", "role-abeyon"],
+      "writeup": "Managed inference target after migrating routing across three Abeyon applications from self-hosted vLLM. Part of the latency and cost optimization story alongside parallel NDJSON batch processing."
+    },
+    {
+      "id": "fastapi",
+      "label": "FastAPI",
+      "links": ["blackbox-qa", "abeyon-llm", "role-abeyon"],
+      "writeup": "Production LLM gateway and agent service layer — OpenAI-compatible routes, structured logging, and Langfuse middleware. Blackbox-QA and Abeyon both treat FastAPI as the thin orchestration shell over retrieval and tool calls."
+    },
+    {
+      "id": "openai-gateways",
+      "label": "OpenAI-Compatible Gateways",
+      "links": ["abeyon-llm", "blackbox-qa"],
+      "writeup": "Drop-in `/v1/chat/completions` surfaces so existing clients swap backends without rewrites. Abeyon's gateway abstracts vLLM and Bedrock; Blackbox-QA exposes the same pattern for local agent development."
+    },
+    {
+      "id": "nextjs",
+      "label": "Next.js",
+      "links": ["ai-kiosk", "arguably", "inventory360", "palate", "role-kiosk", "role-wildlife"],
+      "writeup": "App-router front ends for the CWRU AI avatar kiosk, Arguably debate UI, Inventory360, and Palate. Chosen for SSR, API routes, and fast iteration on dual-screen kiosk layouts serving 100+ daily users."
+    },
+    {
+      "id": "react",
+      "label": "React",
+      "links": ["arguably", "expressink", "inventory360"],
+      "writeup": "Component model for real-time debate views, HackCWRU ExpressInk UI, and inventory dashboards. Paired with custom WebRTC media components and form-heavy admin flows."
+    },
+    {
+      "id": "nodejs",
+      "label": "Node.js",
+      "links": ["arguably", "palate", "eaton"],
+      "writeup": "Signaling servers, MERN APIs, and Socket.IO backends for Arguably, Palate, and Eaton trainer workflows. Handles authoritative turn sync and trainer session analytics over WebSockets."
+    },
+    {
+      "id": "express",
+      "label": "Express",
+      "links": ["palate", "eaton"],
+      "writeup": "HTTP layer for MERN stacks at Eaton and Palate — REST routes, JWT middleware, and embedding search endpoints behind the GenAI trainer chatbots."
+    },
+    {
+      "id": "mongodb",
+      "label": "MongoDB",
+      "links": ["inventory360", "palate", "role-wildlife"],
+      "writeup": "Document store for Wildlife SOS Inventory360 (1,000+ users, 12 sites) and Palate's recipe corpus. Schema validated at the API boundary with Zod on the Inventory360 Next.js app."
+    },
+    {
+      "id": "postgresql",
+      "label": "PostgreSQL",
+      "links": ["blackbox-qa", "abeyon-llm"],
+      "writeup": "Relational backbone for pgvector indexes, gold-set tables, and read-only SQL tool paths in retrieval agents. Preferred when eval reproducibility and ACID matter more than document flexibility."
+    },
+    {
+      "id": "prisma",
+      "label": "Prisma",
+      "links": ["arguably"],
+      "writeup": "ORM and migration layer for Arguably's debate persistence — rooms, users, and match state behind the Next.js app. Keeps schema changes aligned with the mediasoup signaling stack."
+    },
+    {
+      "id": "mern",
+      "label": "MERN",
+      "links": ["eaton", "palate", "role-eaton"],
+      "writeup": "Full-stack pattern for Eaton's GenAI trainer platform and Palate's recipe generator — MongoDB, Express, React, Node in containerized deploy with CI/CD. Eaton MERN stack improved onboarding efficiency by approximately 40%."
+    },
+    {
+      "id": "zod",
+      "label": "Zod",
+      "links": ["inventory360"],
+      "writeup": "Runtime validation for Inventory360 API payloads and form inputs across 12 distributed conservation sites. Catches bad asset records before they hit MongoDB."
+    },
+    {
+      "id": "socketio",
+      "label": "Socket.IO",
+      "links": ["arguably"],
+      "writeup": "Authoritative signaling and turn synchronization for Arguably's live debate engine alongside the mediasoup SFU. ~2.5k LOC of SFU + signaling infrastructure with CI and HTTPS/TURN hardening."
+    },
+    {
+      "id": "webrtc",
+      "label": "WebRTC",
+      "links": ["arguably"],
+      "writeup": "Browser transport for Arguably's peer media paths through a standalone mediasoup SFU. Custom media components integrate capture, publish, and subscribe flows with production reliability testing."
+    },
+    {
+      "id": "mediasoup",
+      "label": "mediasoup",
+      "links": ["arguably"],
+      "writeup": "Selective forwarding unit at the core of Arguably — handles RTP routing, bandwidth adaptation, and multi-party debate rooms. Built as a standalone service with unit tests and TURN-backed deployment."
+    },
+    {
+      "id": "docker",
+      "label": "Docker",
+      "links": ["blackbox-qa", "eaton", "role-eaton"],
+      "writeup": "Containerized Blackbox-QA stacks and Eaton's MERN trainer platform for reproducible deploys. Compose-based local dev for pgvector + API services; CI/CD pipelines push images to production."
+    },
+    {
+      "id": "cicd",
+      "label": "CI/CD",
+      "links": ["blackbox-qa", "eaton", "role-eaton"],
+      "writeup": "GitHub Actions eval gates on Blackbox-QA (Recall@5 regression) and Eaton's containerized release pipeline. Automated judge scoring and retrieval fixtures block merges when metrics slip."
+    },
+    {
+      "id": "lambda",
+      "label": "AWS Lambda",
+      "links": ["ai-kiosk", "role-kiosk"],
+      "writeup": "Serverless orchestration behind the CWRU AI avatar kiosk — RAG lookup, HeyGen session management, and SSO-aware routing. Part of the architecture that holds end-to-end latency under 1.5 seconds."
+    },
+    {
+      "id": "s3",
+      "label": "AWS S3",
+      "links": ["ai-kiosk"],
+      "writeup": "Object storage for kiosk media assets and session artifacts in the WSOM deployment. Used alongside Lambda for static offload so the Next.js front end stays responsive on dual screens."
+    },
+    {
+      "id": "linux",
+      "label": "Linux",
+      "links": ["role-abeyon", "blackbox-qa"],
+      "writeup": "Daily driver for WSL development, Docker hosts, and tmux-based eval runs during the Abeyon internship. Shell scripting for indexer pipelines, gateway tests, and long-running benchmark sessions."
+    },
+    {
+      "id": "websocket",
+      "label": "WebSocket",
+      "links": ["eaton", "role-eaton"],
+      "writeup": "Live KPI dashboards for Eaton trainer sessions — real-time analytics over modular training workflows. Pushes session metrics to MERN admin views without polling."
+    },
+    {
+      "id": "pinecone",
+      "label": "Pinecone",
+      "links": ["ai-kiosk", "role-kiosk"],
+      "writeup": "Managed vector index for the CWRU AI avatar kiosk RAG layer — fast semantic lookup over university knowledge bases. Bridges The Presence constellation to The Instrument's hybrid-retrieval story."
+    },
+    {
+      "id": "heygen",
+      "label": "HeyGen",
+      "links": ["ai-kiosk", "role-kiosk"],
+      "writeup": "Streaming avatar rendering on the dual-screen kiosk — lip-synced responses driven by RAG output. Integrated with Lambda orchestration so avatar latency stays within the sub-1.5s budget."
+    },
+    {
+      "id": "gpt4",
+      "label": "GPT-4",
+      "links": ["palate"],
+      "writeup": "Recipe generation backbone for Palate — text and food-image prompts to structured recipes. Served 500+ generated recipes at 98% uptime on the MERN stack."
+    },
+    {
+      "id": "unity",
+      "label": "Unity",
+      "links": ["brickd-up"],
+      "writeup": "2D platformer engine for Brick'd Up (ECSE290 team project) — inventive level mechanics shipped to Itch.io. Gallery-tier breadth project on The Shelf constellation."
+    },
+    {
+      "id": "jwt-rbac",
+      "label": "JWT / RBAC",
+      "links": ["eaton", "role-eaton"],
+      "writeup": "Role-based access control on Eaton's containerized trainer platform — JWT auth gates trainer vs admin routes. Supports multi-tenant training workflows with live session analytics."
+    }
+  ],
+  "projects": [
+    {
+      "id": "blackbox-qa",
+      "tier": "featured",
+      "title": "Blackbox-QA",
+      "hook": "Framework-free tool-calling agent over hybrid retrieval with Langfuse tracing and CI regression gates.",
+      "writeup": "Built a framework-free tool-calling agent over hybrid retrieval (BM25, dense embeddings, reciprocal rank fusion) and read-only SQL — achieving Recall@5 and MRR of 0.88 versus 0.04 for BM25-only retrieval on labeled gold sets. Implemented Langfuse tracing with automated LLM-as-judge scoring; reached citation match of 0.84 and answer quality of 0.856 on frozen eval fixtures. Added Recall@5 CI regression gates and deterministic pgvector-backed retrieval evaluations on every pull request so embedding or ranker changes cannot silently regress production quality.",
+      "stack": ["Python", "FastAPI", "pgvector", "Langfuse", "Docker"],
+      "metrics": [
+        { "label": "Recall@5 (+hybrid)", "value": "0.88" },
+        { "label": "BM25-only R@5", "value": "0.04" },
+        { "label": "Citation match", "value": "0.84" },
+        { "label": "Answer quality", "value": "0.856" }
+      ],
+      "metricsPinned": [
+        { "label": "Recall@5 (+hybrid)", "value": "0.88" },
+        { "label": "BM25-only R@5", "value": "0.04" }
+      ],
+      "metricsScroll": [
+        { "label": "Citation match", "value": "0.84", "tag": "eval" },
+        { "label": "Answer quality", "value": "0.856", "tag": "eval" },
+        { "label": "MRR (hybrid)", "value": "0.88", "tag": "retrieval" },
+        { "label": "CI Recall@5 gate", "value": "every PR", "tag": "infra" },
+        { "label": "Retrieval stack", "value": "BM25 + dense + RRF", "tag": "retrieval" }
+      ],
+      "links": { "github": "https://github.com/Aadhavsb/blackbox-qa" },
+      "caseStudyPath": "/work/blackbox-qa",
+      "spanName": "blackbox_qa.retrieve_and_answer",
+      "constellation": "instrument",
+      "starKind": "project"
+    },
+    {
+      "id": "abeyon-llm",
+      "tier": "featured",
+      "title": "Abeyon",
+      "subtitle": "Software Engineer Intern — AI/LLM · Washington, DC · May 2026 – Present",
+      "hook": "Production LLM internship — hybrid RAG eval wins, 2.49× batch latency, Bedrock migration, and self-hosted Langfuse across nine models.",
+      "writeup": "Software Engineer Intern at Abeyon (May 2026 – Present): shipped measurable LLM infrastructure in production, not a side project with a company logo pasted on. Implemented BM25 + dense hybrid retrieval with reciprocal rank fusion, improving Recall@40 from 0.875 to 0.887 and lifting retrieval-arm MRR to 0.610 on labeled evaluation sets. Cut work-item generation latency from 123.6s to 49.7s (2.49×) via parallel NDJSON batch processing and migrated inference routing to AWS Bedrock across three applications. Deployed self-hosted Langfuse v3 with custom pricing and tracing on the FastAPI gateway (vLLM + Bedrock) so cost, token, and latency attribution work company-wide — observability is one slice of the story, not the headline.",
+      "stack": ["FastAPI", "Langfuse", "vLLM", "AWS Bedrock", "pgvector", "Hybrid RAG", "LLM-as-Judge"],
+      "metricsPinned": [
+        { "label": "Recall@40 (hybrid)", "value": "0.887" },
+        { "label": "WI latency win", "value": "2.49×" }
+      ],
+      "metricsScroll": [
+        { "label": "Retrieval R@5", "value": "0.754", "tag": "retrieval" },
+        { "label": "vs dense R@5", "value": "0.713", "tag": "retrieval" },
+        { "label": "MRR (retrieval arm)", "value": "0.610", "tag": "retrieval" },
+        { "label": "vs dense MRR", "value": "0.555", "tag": "retrieval" },
+        { "label": "WI gen time", "value": "123.6s → 49.7s", "tag": "batch" },
+        { "label": "WI benchmark", "value": "100 cases", "tag": "eval" },
+        { "label": "Bedrock apps migrated", "value": "3", "tag": "infra" },
+        { "label": "Langfuse models priced", "value": "9", "tag": "observability" },
+        { "label": "Recall@40 baseline", "value": "0.875 → 0.887", "tag": "retrieval" }
+      ],
+      "metrics": [
+        { "label": "Recall@40 (hybrid)", "value": "0.887" },
+        { "label": "WI latency win", "value": "2.49×" },
+        { "label": "Retrieval R@5", "value": "0.754" },
+        { "label": "MRR (retrieval arm)", "value": "0.610" }
+      ],
+      "links": {},
+      "caseStudyPath": "/work/abeyon-llm",
+      "spanName": "abeyon.gateway.chat_completions",
+      "constellation": "instrument",
+      "starKind": "experience",
+      "linkedExperience": "role-abeyon"
+    },
+    {
+      "id": "arguably",
+      "tier": "featured",
+      "title": "Arguably",
+      "hook": "Rules-driven debate engine with mediasoup SFU, Socket.IO turn sync, and live transcription pipeline.",
+      "writeup": "Implemented a standalone mediasoup SFU and Socket.IO signaling stack (~2.5k LOC) and integrated browser WebRTC functionality through custom media components for a rules-driven live debate engine. Added SFU unit testing, CI automation, HTTPS/CORS/TURN infrastructure, and production reliability improvements so multi-party rooms stay synchronized under authoritative server turn logic. Real-time infrastructure story for The Arena constellation — the counterweight to traceable batch LLM systems in The Instrument.",
+      "stack": ["mediasoup", "WebRTC", "Socket.IO", "Next.js", "Prisma"],
+      "metrics": [
+        { "label": "SFU + signaling", "value": "~2.5k LOC" },
+        { "label": "Transport", "value": "WebRTC" },
+        { "label": "Sync", "value": "Authoritative server" }
+      ],
+      "links": { "github": "https://github.com/Aadhavsb/arguably" },
+      "spanName": "arguably.sfu.relay",
+      "constellation": "arena",
+      "starKind": "project"
+    },
+    {
+      "id": "ai-kiosk",
+      "tier": "featured",
+      "title": "CWRU AI Avatar Kiosk",
+      "subtitle": "Software Engineer Intern · WSOM, CWRU · Jun 2025 – Present",
+      "hook": "Dual-screen AI avatar kiosk with Next.js, AWS Lambda, HeyGen, and Pinecone RAG — sub-1.5s latency for 100+ daily users through CWRU SSO.",
+      "writeup": "Built a dual-screen AI avatar kiosk using Next.js, AWS Lambda, HeyGen, and Pinecone-backed RAG as Software Engineer Intern at WSOM, Case Western Reserve University (Jun 2025 – Present). Achieved sub-1.5s end-to-end latency while serving 100+ daily users through CWRU SSO on physical kiosk hardware. Bridges shipped product UX (The Presence) with the same RAG patterns measured in Blackbox-QA and Abeyon — proof that retrieval quality work shows up in user-facing latency budgets, not just offline benchmarks.",
+      "stack": ["Next.js", "AWS Lambda", "HeyGen", "Pinecone", "RAG"],
+      "metrics": [
+        { "label": "Latency", "value": "<1.5s" },
+        { "label": "Daily users", "value": "100+" },
+        { "label": "Auth", "value": "CWRU SSO" },
+        { "label": "Display", "value": "Dual-screen" }
+      ],
+      "links": {},
+      "caseStudyPath": "/work/ai-kiosk",
+      "spanName": "kiosk.avatar.respond",
+      "constellation": "presence",
+      "starKind": "experience",
+      "linkedExperience": "role-kiosk"
+    },
+    {
+      "id": "eaton",
+      "tier": "featured",
+      "title": "Eaton GenAI Platform",
+      "subtitle": "AI Software Engineer Intern · Remote · Sep 2025 – Jan 2026",
+      "hook": "MERN RAG chatbots for customer-interaction training with containerized deploy, RBAC, and live KPI dashboards.",
+      "writeup": "Architected GenAI RAG chatbots for customer-interaction training using a MERN backend with vector retrieval and embedding search as AI Software Engineer Intern at Eaton Corporation (Sep 2025 – Jan 2026), improving onboarding efficiency by approximately 40%. Deployed a containerized MERN platform with CI/CD, JWT/RBAC, and live WebSocket KPI dashboards for production trainer session analytics across modular training workflows. Industry-scale GenAI in The Platform constellation — same RAG vocabulary as The Instrument, applied to trainer enablement rather than developer tooling.",
+      "stack": ["MERN", "RAG", "Docker", "CI/CD", "WebSocket"],
+      "metrics": [
+        { "label": "Onboarding efficiency", "value": "~40%" },
+        { "label": "Architecture", "value": "Modular workflows" },
+        { "label": "Analytics", "value": "Live KPIs" }
+      ],
+      "links": {},
+      "spanName": "eaton.trainer.rag_chat",
+      "constellation": "platform",
+      "starKind": "experience",
+      "linkedExperience": "role-eaton",
+      "metricsScroll": [
+        { "label": "Onboarding lift", "value": "~40%", "tag": "impact" },
+        { "label": "Deploy", "value": "Docker + CI/CD", "tag": "infra" },
+        { "label": "Auth", "value": "JWT / RBAC", "tag": "infra" },
+        { "label": "Analytics", "value": "Live WebSocket KPIs", "tag": "product" }
+      ]
+    },
+    {
+      "id": "inventory360",
+      "tier": "gallery",
+      "title": "Wildlife SOS",
+      "subtitle": "Software Developer · Inventory360 platform · Jun 2025 – Jul 2025",
+      "hook": "Secure inventory management (Inventory360) for 12 distributed sites and 1,000+ users with real-time asset tracking.",
+      "stack": ["Next.js", "MongoDB", "Zod", "TypeScript"],
+      "metrics": [
+        { "label": "Users", "value": "1,000+" },
+        { "label": "Sites", "value": "12" }
+      ],
+      "links": { "github": "https://github.com/Aadhavsb/inventory360" },
+      "spanName": "inventory360.assets.track",
+      "starKind": "experience",
+      "linkedExperience": "role-wildlife"
+    },
+    {
+      "id": "palate",
+      "tier": "gallery",
+      "title": "Palate",
+      "hook": "MERN recipe platform with GPT-4 generation from text or food images.",
+      "stack": ["MERN", "GPT-4", "MongoDB"],
+      "metrics": [
+        { "label": "Recipes generated", "value": "500+" },
+        { "label": "Uptime", "value": "98%" }
+      ],
+      "links": { "github": "https://github.com/Aadhavsb/Palate" },
+      "spanName": "palate.recipe.generate",
+      "starKind": "project"
+    },
+    {
+      "id": "expressink",
+      "tier": "gallery",
+      "title": "ExpressInk",
+      "hook": "HackCWRU project using computer vision on children's drawings to support emotional-state screening.",
+      "stack": ["React", "Node.js", "Computer Vision"],
+      "metrics": [{ "label": "HackCWRU 2025", "value": "4th place" }],
+      "links": { "github": "https://github.com/Aadhavsb/ExpressInk" },
+      "spanName": "expressink.cv.analyze",
+      "starKind": "project"
+    },
+    {
+      "id": "brickd-up",
+      "tier": "gallery",
+      "title": "Brick'd Up",
+      "hook": "2D Unity platformer built as an ECSE290 team project — inventive level mechanics, published on Itch.io.",
+      "stack": ["C#", "Unity", "2D Platformer"],
+      "metrics": [
+        { "label": "Format", "value": "Team project" },
+        { "label": "Shipped", "value": "Itch.io" }
+      ],
+      "links": { "demo": "https://ecse-csds290.itch.io/brickdup" },
+      "spanName": "brickdup.gameplay.session",
+      "starKind": "project"
+    },
+    {
+      "id": "ml-research",
+      "tier": "labs",
+      "title": "ML Research Labs",
+      "hook": "Chunked decomposition and distillation/pruning experiments — transformer inference research at the Datta Research Lab, CWRU.",
+      "stack": ["PyTorch", "Transformers", "KV cache", "SVD"],
+      "metrics": [
+        { "label": "Focus", "value": "Inference efficiency" },
+        { "label": "Topics", "value": "Distillation · Pruning" }
+      ],
+      "links": { "github": "https://github.com/Aadhavsb/chunkedDecomp" },
+      "spanName": "research.chunked_decomp",
+      "constellation": "lab",
+      "starKind": "project",
+      "linkedExperience": "role-datta"
+    },
+    {
+      "id": "knowledge-distillation-lab",
+      "tier": "labs",
+      "title": "Knowledge Distillation Lab",
+      "hook": "Knowledge distillation with ResNet-18 and ViT-Tiny — teacher-student compression experiments at the Datta Research Lab, CWRU.",
+      "stack": ["PyTorch", "ResNet-18", "ViT-Tiny", "Knowledge Distillation"],
+      "metrics": [
+        { "label": "Models", "value": "ResNet-18 · ViT-Tiny" },
+        { "label": "Focus", "value": "Distillation" }
+      ],
+      "links": { "github": "https://github.com/Aadhavsb/knowledge-distillation-lab" },
+      "spanName": "lab.distill.train",
+      "constellation": "lab",
+      "starKind": "project",
+      "linkedExperience": "role-datta"
+    }
+  ],
+  "experience": [
+    {
+      "id": "role-abeyon",
+      "role": "Software Engineer Intern — AI/LLM",
+      "org": "Abeyon",
+      "period": "May 2026 – Present",
+      "location": "Washington, DC",
+      "skyStarId": "abeyon-llm",
+      "highlights": [
+        "Deployed Langfuse v3 and instrumented production FastAPI LLM gateway with cost, token, and latency attribution across 9 models.",
+        "Built LLM-as-judge eval pipelines; improved Recall@40 via BM25 + dense hybrid retrieval with RRF.",
+        "Cut work-item generation latency 2.49× via parallel NDJSON batch processing; migrated inference to AWS Bedrock."
+      ]
+    },
+    {
+      "id": "role-eaton",
+      "role": "AI Software Engineer Intern",
+      "org": "Eaton Corporation",
+      "period": "Sep 2025 – Jan 2026",
+      "location": "Remote",
+      "skyStarId": "eaton",
+      "highlights": [
+        "Architected GenAI RAG chatbots for customer-interaction training (~40% onboarding lift).",
+        "Deployed containerized MERN platform with CI/CD, JWT/RBAC, and live WebSocket KPI dashboards."
+      ]
+    },
+    {
+      "id": "role-kiosk",
+      "role": "Software Engineer Intern (AI Avatar Kiosk)",
+      "org": "WSOM, Case Western Reserve University",
+      "period": "Jun 2025 – Present",
+      "location": "Cleveland, OH",
+      "skyStarId": "ai-kiosk",
+      "highlights": [
+        "Built dual-screen AI avatar kiosk with Next.js, AWS Lambda, HeyGen, and Pinecone RAG.",
+        "Achieved sub-1.5s latency serving 100+ daily users through CWRU SSO."
+      ]
+    },
+    {
+      "id": "role-datta",
+      "role": "Undergraduate Researcher",
+      "org": "Datta Research Lab, CWRU",
+      "period": "2025 – Present",
+      "location": "Cleveland, OH",
+      "skyStarId": "role-datta",
+      "onSky": true,
+      "skyTier": "labs",
+      "skyTitle": "Datta Research Lab",
+      "constellation": "lab",
+      "hook": "Undergraduate research on transformer inference efficiency — distillation, pruning, KV-cache, and chunked decomposition.",
+      "stack": ["PyTorch", "Knowledge Distillation", "ResNet-18", "ViT-Tiny", "SVD"],
+      "highlights": [
+        "Transformer inference-efficiency research — chunked decomposition, KV-cache analysis, and SVD experiments (chunkedDecomp, KV-Cache-Analysis repos).",
+        "Knowledge distillation and pruning studies with ResNet-18 and ViT-Tiny teacher–student compression (knowledge-distillation-lab, pruning-lab)."
+      ],
+      "linkedProjects": ["ml-research", "knowledge-distillation-lab"]
+    },
+    {
+      "id": "role-ta",
+      "role": "Undergraduate Teaching Assistant",
+      "org": "CWRU Computer Science Department",
+      "period": "Aug 2024 – Present",
+      "location": "Cleveland, OH",
+      "skyStarId": null,
+      "highlights": [
+        "Lead weekly CS labs for 100+ students and hold 5+ office hours weekly.",
+        "Developed Python autograding utilities supporting course operations."
+      ]
+    },
+    {
+      "id": "role-wildlife",
+      "role": "Software Developer",
+      "org": "Wildlife SOS",
+      "period": "Jun 2025 – Jul 2025",
+      "location": "Remote",
+      "skyStarId": "inventory360",
+      "highlights": [
+        "Built internal asset-tracking platform for 1,000+ users across 12 conservation sites."
+      ]
+    }
+  ]
+}
