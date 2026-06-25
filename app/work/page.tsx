@@ -1,25 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import siteRaw from "@/data/site.json";
-
-const site = siteRaw as any;
+import { constellationOf, site } from "@/lib/site";
+import type { Project } from "@/data/types";
 
 export const metadata: Metadata = {
   title: "Work — Aadhav Bharadwaj",
   description: "Index of projects, internships, and research.",
 };
 
-const CONST_COLOR: Record<string, string> = {
-  instrument: "#9bb8ff", presence: "#7ee0d0", arena: "#c2a6ff",
-  platform: "#f3b14e", shelf: "#fde4b8", lab: "#bcd0ff",
-};
-const conOf = (p: any) =>
-  p.constellation || (p.tier === "gallery" ? "shelf" : p.tier === "labs" ? "lab" : null);
-
-function Card({ p }: { p: any }) {
+function Card({ p }: { p: Project }) {
   const href = p.caseStudyPath || p.links?.github || p.links?.demo || null;
   const internal = p.caseStudyPath;
-  const con = conOf(p);
+  const con = constellationOf(p);
   const kindColor = p.starKind === "experience" ? "#ffcf7a" : "#a78bfa";
   const inner = (
     <>
@@ -33,13 +25,16 @@ function Card({ p }: { p: any }) {
   );
   if (!href) return <div className="work-card">{inner}</div>;
   if (internal) return <Link className="work-card" href={href}>{inner}</Link>;
-  return <a className="work-card" href={href} target="_blank" rel="noreferrer">{inner}</a>;
+  return (
+    <a className="work-card" href={href} target="_blank" rel="noreferrer">
+      {inner}
+    </a>
+  );
 }
 
 export default function WorkIndex() {
-  const projects = site.projects as any[];
-  const featured = projects.filter((p) => p.tier === "featured");
-  const more = projects.filter((p) => p.tier !== "featured");
+  const featured = site.projects.filter((p) => p.tier === "featured");
+  const more = site.projects.filter((p) => p.tier !== "featured");
 
   return (
     <main className="work-wrap">
@@ -63,7 +58,7 @@ export default function WorkIndex() {
       <section className="work-section">
         <h2>Experience</h2>
         <div className="work-grid">
-          {(site.experience as any[]).map((r) => (
+          {site.experience.map((r) => (
             <div className="work-card" key={r.id}>
               <div className="wk-kind" style={{ color: "#ffcf7a" }}>Experience</div>
               <div className="wk-title">{r.org}</div>

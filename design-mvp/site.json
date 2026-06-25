@@ -431,7 +431,7 @@
       ],
       "links": { "github": "https://github.com/Aadhavsb/inventory360" },
       "spanName": "inventory360.assets.track",
-      "starKind": "project",
+      "starKind": "experience",
       "linkedExperience": "role-wildlife"
     },
     {
@@ -515,9 +515,10 @@
       "location": "Washington, DC",
       "skyStarId": "abeyon-llm",
       "highlights": [
-        "Deployed Langfuse v3 and instrumented production FastAPI LLM gateway with cost, token, and latency attribution across 9 models.",
-        "Built LLM-as-judge eval pipelines; improved Recall@40 via BM25 + dense hybrid retrieval with RRF.",
-        "Cut work-item generation latency 2.49× via parallel NDJSON batch processing; migrated inference to AWS Bedrock."
+        "Implemented BM25 + dense hybrid retrieval with reciprocal rank fusion, improving Recall@40 to 0.887 on labeled evaluation sets.",
+        "Cut work-item generation latency 2.49× (123.6s → 49.7s) via parallel NDJSON batch processing; migrated inference routing to AWS Bedrock across three applications.",
+        "Built LLM-as-judge evaluation pipelines with frozen gold sets; executed 100-case benchmarks and stage-level RAG debugging.",
+        "Deployed self-hosted Langfuse v3 and instrumented production FastAPI LLM gateway with cost, token, and latency attribution across 9 models."
       ]
     },
     {
