@@ -294,27 +294,85 @@
       "tier": "featured",
       "title": "Blackbox-QA",
       "hook": "Framework-free tool-calling agent over hybrid retrieval with Langfuse tracing and CI regression gates.",
-      "writeup": "Built a framework-free tool-calling agent over hybrid retrieval (BM25, dense embeddings, reciprocal rank fusion) and read-only SQL — achieving Recall@5 and MRR of 0.88 versus 0.04 for BM25-only retrieval on labeled gold sets. Implemented Langfuse tracing with automated LLM-as-judge scoring; reached citation match of 0.84 and answer quality of 0.856 on frozen eval fixtures. Added Recall@5 CI regression gates and deterministic pgvector-backed retrieval evaluations on every pull request so embedding or ranker changes cannot silently regress production quality.",
+      "writeup": "Built a framework-free tool-calling agent over hybrid retrieval (BM25, dense embeddings, reciprocal rank fusion) and read-only SQL on the full NTSB aviation corpus — 30,646 reports and 125,213 narrative chunks. On that scale, hybrid+rerank Recall@5 reaches 0.64 versus 0.04 for BM25-only; end-to-end citation match is 0.68 and answer quality 0.76 on a frozen 25-query gold set. Langfuse traces every run with out-of-band judge scores, and a deterministic Recall@5 gate blocks PRs when retrieval regresses.",
       "stack": ["Python", "FastAPI", "pgvector", "Langfuse", "Docker"],
       "metrics": [
-        { "label": "Recall@5 (+hybrid)", "value": "0.88" },
+        { "label": "Reports ingested", "value": "30,646" },
+        { "label": "R@5 hybrid+rerank", "value": "0.64" },
         { "label": "BM25-only R@5", "value": "0.04" },
-        { "label": "Citation match", "value": "0.84" },
-        { "label": "Answer quality", "value": "0.856" }
+        { "label": "Answer quality", "value": "0.76" }
       ],
       "metricsPinned": [
-        { "label": "Recall@5 (+hybrid)", "value": "0.88" },
-        { "label": "BM25-only R@5", "value": "0.04" }
+        { "label": "Chunks indexed", "value": "125,213" },
+        { "label": "R@5 (+rerank)", "value": "0.64" }
       ],
       "metricsScroll": [
-        { "label": "Citation match", "value": "0.84", "tag": "eval" },
-        { "label": "Answer quality", "value": "0.856", "tag": "eval" },
-        { "label": "MRR (hybrid)", "value": "0.88", "tag": "retrieval" },
+        { "label": "BM25-only R@5", "value": "0.04", "tag": "retrieval" },
+        { "label": "Hybrid R@5", "value": "0.40", "tag": "retrieval" },
+        { "label": "Citation match", "value": "0.68", "tag": "eval" },
+        { "label": "Answer quality", "value": "0.76", "tag": "eval" },
+        { "label": "Gold queries", "value": "25 frozen", "tag": "eval" },
         { "label": "CI Recall@5 gate", "value": "every PR", "tag": "infra" },
         { "label": "Retrieval stack", "value": "BM25 + dense + RRF", "tag": "retrieval" }
       ],
       "links": { "github": "https://github.com/Aadhavsb/blackbox-qa" },
       "caseStudyPath": "/work/blackbox-qa",
+      "caseStudy": {
+        "corpusNote": "All retrieval and end-to-end numbers below were measured on the full ingested NTSB corpus (30,646 reports · 125,213 chunks). Artifacts: evals/ablation.json, evals/answers.json in the repo.",
+        "sections": [
+          {
+            "id": "problem",
+            "title": "Problem",
+            "body": "Maintenance and safety teams ask natural-language questions over incident narratives — paraphrased queries, aggregate counts, and cited answers — but keyword-only search collapses when users do not share vocabulary with the source text. I needed a system that could retrieve, aggregate, and cite from a corpus large enough to stress-test hybrid retrieval, not a toy demo on a few hundred documents."
+          },
+          {
+            "id": "approach",
+            "title": "Approach",
+            "body": "One Postgres database holds structured report fields, dense embeddings (HNSW via pgvector), and a tsvector full-text index. A raw tool-calling loop — no LangChain — picks among hybrid_search, read-only sql_query, and fetch_full_report each turn. Retrieval fuses BM25 and dense vectors with reciprocal rank fusion, then optionally reranks with a local cross-encoder. Every agent run is traced in self-hosted Langfuse; judge scores attach to the same trace out-of-band.",
+            "image": "/work/blackbox-qa/architecture.svg",
+            "imageAlt": "Blackbox-QA architecture: question to agent loop, three tools, Postgres pgvector store, grounded answer and Langfuse trace",
+            "caption": "Bounded agent loop over a single relational + vector store. Tracing and judge scoring stay off the request hot path."
+          },
+          {
+            "id": "decisions",
+            "title": "Key decisions",
+            "bullets": [
+              "Framework-free agent — explicit tool schema, bounded turns (≤8), and validated read-only SQL instead of an opaque orchestration layer.",
+              "Hybrid over dense-only — gold queries are paraphrased; BM25-only Recall@5 is 0.04 on the full corpus while hybrid+rerank reaches 0.64.",
+              "Confidence gate on rerank score, not model self-report — one bounded query-rewrite retry fires when the top cross-encoder score is low (calibrated on the gold set).",
+              "Two-tier eval — deterministic Recall@5 blocks merges on a hermetic CI fixture; full-corpus ablation and LLM-as-judge runs are reproducible via poetry run python -m evals.run."
+            ]
+          },
+          {
+            "id": "results",
+            "title": "Results (full corpus)",
+            "body": "Retrieval ablation on 25 hand-verified gold queries over the complete ingest. End-to-end agent quality uses the same gold set with an LLM-as-judge (citation_match is strict — it only counts exact gold ev_id cites).",
+            "metrics": [
+              { "label": "Reports / chunks", "value": "30,646 / 125k" },
+              { "label": "BM25-only R@5", "value": "0.04" },
+              { "label": "Hybrid R@5", "value": "0.40" },
+              { "label": "Hybrid + rerank R@5", "value": "0.64" },
+              { "label": "Citation match (E2E)", "value": "0.68" },
+              { "label": "Answer quality (E2E)", "value": "0.76" }
+            ],
+            "callout": "At full scale, reranking adds +0.24 Recall@5 over hybrid alone — reordering helps once the hybrid pool already contains the right documents. BM25-only barely moves because queries are natural-language paraphrases, not keyword lookups."
+          },
+          {
+            "id": "failure-modes",
+            "title": "Failure modes",
+            "bullets": [
+              "747 generator-control query — retrieval misses the gold report; low rerank score triggers retry but citation_match still fails (visible in Langfuse as a low-confidence trace).",
+              "Strict citation metric — correct answers citing a different valid incident score 0 on citation_match; answer_quality is the better end-to-end signal.",
+              "Scale vs slice — a smaller development slice showed higher Recall@5; full ingest is the honest headline number for portfolio and README."
+            ]
+          },
+          {
+            "id": "scale",
+            "title": "At scale",
+            "body": "The design isolates swappable pieces: HNSW ANN for vectors, env-var model endpoints for embedder and reranker, async batched Langfuse export, and a blocking PR gate on deterministic retrieval only. Growing to ~300k reports is mostly ops tuning — bound rerank pools, add read replicas for SQL aggregates, partition chunks by year — not a rewrite."
+          }
+        ]
+      },
       "spanName": "blackbox_qa.retrieve_and_answer",
       "constellation": "instrument",
       "starKind": "project"
@@ -350,6 +408,77 @@
       ],
       "links": {},
       "caseStudyPath": "/work/abeyon-llm",
+      "caseStudy": {
+        "corpusNote": "NDA-safe summary — no customer names, proprietary configs, or production URLs. Metrics sourced from labeled internal eval sets and shipped benchmarks.",
+        "sections": [
+          {
+            "id": "context",
+            "title": "Context",
+            "body": "Abeyon builds gov-adjacent maintenance-domain software where LLM calls flow through a central OpenAI-compatible gateway to vLLM and AWS Bedrock backends. My internship work focused on measurable retrieval quality, batch generation latency, inference migration, and company-wide observability — not one-off prompts."
+          },
+          {
+            "id": "hybrid-rag",
+            "title": "Hybrid retrieval",
+            "body": "The tech-manual linking pipeline matched maintenance codes to manual sections using dense vector search alone. I added a BM25 arm and reciprocal rank fusion behind a retrieval-mode flag so teams could run dense, sparse, or hybrid paths without forking the pipeline.",
+            "metrics": [
+              { "label": "Recall@40 (hybrid)", "value": "0.887" },
+              { "label": "Retrieval R@5", "value": "0.754" },
+              { "label": "vs dense R@5", "value": "0.713" },
+              { "label": "MRR (retrieval arm)", "value": "0.610" }
+            ],
+            "callout": "Root-caused a prior failure mode where dense-only retrieval missed keyword-critical matches — hybrid fusion recovered recall without sacrificing the semantic arm."
+          },
+          {
+            "id": "batch-latency",
+            "title": "Work-item generation latency",
+            "body": "Work-item (WI) generation drafted eight sections per request. The legacy path rebuilt shared DB context on every section and called the LLM serially from the browser. I shipped a parallel NDJSON batch endpoint: build context once, fan sections across a bounded thread pool, stream each section as a line the moment it completes.",
+            "metrics": [
+              { "label": "Avg latency", "value": "123.6s → 49.7s" },
+              { "label": "Speedup", "value": "2.49×" },
+              { "label": "Benchmark", "value": "100 frozen cases" },
+              { "label": "Sections / WI", "value": "8 parallel" }
+            ],
+            "bullets": [
+              "Validated parallel fan-out with jstack during live runs on the indexer stack.",
+              "Failure contract: any errored section fails the whole generation — no partial saves that leave inconsistent WIs."
+            ]
+          },
+          {
+            "id": "bedrock",
+            "title": "Bedrock migration",
+            "body": "Migrated inference routing for three CUI-facing applications from self-hosted vLLM pods to AWS Bedrock model IDs through the same gateway surface — apps kept calling OpenAI-compatible routes while backends swapped underneath. Registered Mixtral, Qwen3, and Gemma models in gateway config with Bedrock runtime URLs."
+          },
+          {
+            "id": "observability",
+            "title": "Gateway observability",
+            "body": "Deployed self-hosted Langfuse v3 and instrumented the production FastAPI gateway: per-request token usage, latency, model resolution, and cost attribution across nine priced models (Bedrock list prices + derived vLLM rates). Traces omit prompt/response bodies for PII posture; X-Trace-Id echoes for cross-service correlation.",
+            "metrics": [
+              { "label": "Models priced", "value": "9" },
+              { "label": "Backends", "value": "vLLM + Bedrock" },
+              { "label": "Apps migrated", "value": "3" }
+            ]
+          },
+          {
+            "id": "eval-discipline",
+            "title": "Eval discipline",
+            "body": "Built and operated LLM-as-judge pipelines over frozen gold sets — WI generation benchmarks, retrieval ablations, and stage-level CSV forensics on multi-hop RAG. The through-line: measure the weakest hop (retrieval vs rerank vs refine) instead of trusting a single end accuracy number.",
+            "bullets": [
+              "Refactored judge scoring so Python derives aggregates deterministically — the model only scores sections.",
+              "Gate false-negative work on the matching pipeline (CPSAMM-514): gate recall 97.8%, E2E accuracy +7.2 pp — ship pending PR merge."
+            ]
+          },
+          {
+            "id": "patterns",
+            "title": "Patterns I'd repeat",
+            "bullets": [
+              "Feature-flag retrieval modes before ripping out dense-only paths.",
+              "Stream partial results (NDJSON) when parallel work finishes at different times.",
+              "Keep observability off the hot path — async Langfuse batches, no bodies in traces.",
+              "Commit baselines and gate deterministic layers; monitor stochastic judge runs."
+            ]
+          }
+        ]
+      },
       "spanName": "abeyon.gateway.chat_completions",
       "constellation": "instrument",
       "starKind": "experience",

@@ -12,6 +12,24 @@ export interface ProjectLinks {
   demo?: string;
 }
 
+export interface CaseStudySection {
+  id: string;
+  title: string;
+  body?: string;
+  bullets?: string[];
+  pre?: string;
+  image?: string;
+  imageAlt?: string;
+  caption?: string;
+  metrics?: Metric[];
+  callout?: string;
+}
+
+export interface CaseStudy {
+  corpusNote?: string;
+  sections: CaseStudySection[];
+}
+
 export interface Project {
   id: string;
   tier: ProjectTier;
@@ -25,6 +43,7 @@ export interface Project {
   metricsScroll?: Metric[];
   links?: ProjectLinks;
   caseStudyPath?: string;
+  caseStudy?: CaseStudy;
   spanName?: string;
   constellation?: string;
   starKind: StarKind;

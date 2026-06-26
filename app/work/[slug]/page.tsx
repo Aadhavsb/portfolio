@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CaseStudyBody } from "@/app/components/CaseStudyBody";
 import { findExperience, findProjectByCaseSlug, site } from "@/lib/site";
 import type { Metric } from "@/data/types";
 
@@ -69,6 +70,8 @@ export default async function CaseStudy({
           <p className="cs-writeup">{p.writeup}</p>
         </section>
       )}
+
+      {p.caseStudy && <CaseStudyBody caseStudy={p.caseStudy} />}
 
       {metrics.length > 0 && (
         <section className="work-section">
