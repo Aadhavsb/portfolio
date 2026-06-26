@@ -39,6 +39,22 @@ function SectionBlock({ section }: { section: CaseStudySection }) {
           {section.caption && <figcaption className="cs-caption">{section.caption}</figcaption>}
         </figure>
       )}
+      {section.images && section.images.length > 0 && (
+        <div className="cs-figure-grid">
+          {section.images.map((img) => (
+            <figure className="cs-figure" key={img.src}>
+              <Image
+                src={img.src}
+                alt={img.alt ?? ""}
+                width={920}
+                height={520}
+                className="cs-figure-img"
+              />
+              {img.caption && <figcaption className="cs-caption">{img.caption}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      )}
       {section.metrics && section.metrics.length > 0 && (
         <MetricGrid metrics={section.metrics} />
       )}

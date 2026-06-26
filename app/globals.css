@@ -197,7 +197,10 @@ a{color:inherit}
 .cs-bullets{margin:14px 0 0;padding-left:1.2em;max-width:64ch;color:#cdd4e2;font-size:14px;line-height:1.75}
 .cs-bullets li{margin-bottom:8px}
 .cs-pre{margin:16px 0 0;padding:16px 18px;overflow-x:auto;border:1px solid var(--hair);border-radius:12px;background:rgba(4,6,12,.85);font-size:11.5px;line-height:1.55;color:#b8c0d4;max-width:100%}
+.cs-figure-grid{display:grid;gap:20px;margin-top:20px}
+@media (min-width:720px){.cs-figure-grid{grid-template-columns:1fr}}
 .cs-figure{margin:20px 0 0}
+.cs-figure-grid .cs-figure{margin:0}
 .cs-figure-img{width:100%;height:auto;border-radius:12px;border:1px solid var(--hair-strong);background:rgba(8,11,19,.5)}
 .cs-caption{margin-top:10px;font-size:11px;line-height:1.55;color:var(--muted);max-width:60ch}
 .cs-callout{margin:16px 0 0;padding:14px 16px;border:1px solid var(--hair-strong);border-radius:12px;background:rgba(243,177,78,.05);font-size:13px;line-height:1.7;color:#d4dae8;max-width:64ch}

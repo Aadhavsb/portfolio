@@ -358,6 +358,23 @@
             "callout": "At full scale, reranking adds +0.24 Recall@5 over hybrid alone — reordering helps once the hybrid pool already contains the right documents. BM25-only barely moves because queries are natural-language paraphrases, not keyword lookups."
           },
           {
+            "id": "observability",
+            "title": "Langfuse traces",
+            "body": "Every agent run is a trace with one generation per LLM turn and a span per tool call. Judge scores (citation_match and answer_quality) post out-of-band via the Scores API and attach to the same trace_id — quality and token usage in one UI.",
+            "images": [
+              {
+                "src": "/work/blackbox-qa/trace-high-confidence.png",
+                "alt": "Langfuse trace for a grounded propeller-strike answer with answer_quality 0.97 and citation_match true",
+                "caption": "High-confidence run — grounded answer with citation_match and answer_quality on the same trace (8,144 tokens, four turns, two hybrid_search spans)."
+              },
+              {
+                "src": "/work/blackbox-qa/trace-low-confidence.png",
+                "alt": "Langfuse trace for the 747 generator-control query with answer_quality 0.20 and citation_match false",
+                "caption": "Low-confidence failure — retrieval miss on the 747 generator-control query; answer_quality 0.20, citation_match false after retry."
+              }
+            ]
+          },
+          {
             "id": "failure-modes",
             "title": "Failure modes",
             "bullets": [

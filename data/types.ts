@@ -12,6 +12,12 @@ export interface ProjectLinks {
   demo?: string;
 }
 
+export interface CaseStudyImage {
+  src: string;
+  alt?: string;
+  caption?: string;
+}
+
 export interface CaseStudySection {
   id: string;
   title: string;
@@ -21,6 +27,7 @@ export interface CaseStudySection {
   image?: string;
   imageAlt?: string;
   caption?: string;
+  images?: CaseStudyImage[];
   metrics?: Metric[];
   callout?: string;
 }
