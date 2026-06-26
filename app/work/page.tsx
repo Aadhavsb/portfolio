@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 function Card({ p }: { p: Project }) {
-  const href = p.caseStudyPath || p.links?.github || p.links?.demo || null;
+  const href = p.caseStudyPath || p.links?.demo || p.links?.github || null;
   const internal = p.caseStudyPath;
   const con = constellationOf(p);
   const kindColor = p.starKind === "experience" ? "#ffcf7a" : "#a78bfa";

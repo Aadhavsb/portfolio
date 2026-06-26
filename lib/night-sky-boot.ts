@@ -53,6 +53,24 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     const ctx=cv.getContext('2d',{alpha:false, desynchronized:true});
     if(!ctx) return;
     let W=0,H=0,DPR=1,CW=0,CH=0,area=0;
+    const LAYOUT_W=1280, LAYOUT_H=820;
+    let viewScale=1, offsetX=0, offsetY=0, useLayout=false;
+    function screenToLayout(sx,sy){return[(sx-offsetX)/viewScale,(sy-offsetY)/viewScale];}
+    function layoutToScreen(lx,ly){return[offsetX+lx*viewScale,offsetY+ly*viewScale];}
+    function layoutPx(lx,ly){const[sx,sy]=layoutToScreen(lx,ly);return[sx*DPR,sy*DPR];}
+    function updateLayoutViewport(){
+      const vw=innerWidth,vh=innerHeight;
+      useLayout=vw<900||vh<640;
+      if(useLayout){
+        viewScale=Math.min(vw/LAYOUT_W,vh/LAYOUT_H);
+        offsetX=(vw-LAYOUT_W*viewScale)/2;
+        offsetY=(vh-LAYOUT_H*viewScale)/2;
+        CW=LAYOUT_W; CH=LAYOUT_H;
+      } else {
+        viewScale=1; offsetX=0; offsetY=0;
+        CW=vw; CH=vh;
+      }
+    }
     let bgStars=[], neb=null, grainTiles=[], grainPats=[], gi=0, vignette=null, bgGrad=null;
     let sprites=[], spikeSprite=null, meteors=[], nextMeteor=4, lastT=0;
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -206,18 +224,19 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
         if(!members.length)continue;
         let sx=0; members.forEach(m=>{sx+=m.rx;}); sx/=members.length;
         const minY=Math.min(...members.map(m=>m.ry-m.r));
-        const lx=sx*DPR, ly=(minY-30)*DPR;
+        const [ax,ay]=layoutPx(sx,minY-30);
         const isHotCon = hot && hot.con===key;
         const dim = isHotCon ? 0.42 : (0.30 - 0.16*litAmt);
-        ctx.font=`340 ${15*DPR}px "Fraunces", Georgia, serif`;
+        ctx.font=`340 ${15*DPR*viewScale}px "Fraunces", Georgia, serif`;
         ctx.fillStyle=`rgba(233,236,245,${dim})`; ctx.shadowColor='rgba(2,3,8,.8)'; ctx.shadowBlur=10*DPR;
-        ctx.fillText(CONST[key].name.toUpperCase(), lx, ly); ctx.shadowBlur=0;
+        ctx.fillText(CONST[key].name.toUpperCase(), ax, ay); ctx.shadowBlur=0;
       }
       ctx.restore();
     }
     function drawEdges(){
       for(const e of EDGES){
-        const ax=e.a.rx*DPR, ay=e.a.ry*DPR, bx=e.b.rx*DPR, by=e.b.ry*DPR;
+        const [ax,ay]=layoutPx(e.a.rx,e.a.ry);
+        const [bx,by]=layoutPx(e.b.rx,e.b.ry);
         const bothLit = litSet ? (litSet.has(e.a.id) && litSet.has(e.b.id)) : false;
         const rest = e.cross ? 0.16 : 0.46;
         const target = bothLit ? (e.cross?0.5:0.82) : 0.05;
@@ -227,26 +246,26 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
         const grd=ctx.createLinearGradient(ax,ay,bx,by);
         grd.addColorStop(0,`rgba(${ca[0]},${ca[1]},${ca[2]},${alpha})`);
         grd.addColorStop(1,`rgba(${cb[0]},${cb[1]},${cb[2]},${alpha})`);
-        ctx.strokeStyle=grd; ctx.lineWidth=DPR*((e.cross?0.85:1.15)+(bothLit?0.9*litAmt:0));
+        ctx.strokeStyle=grd; ctx.lineWidth=DPR*viewScale*((e.cross?0.85:1.15)+(bothLit?0.9*litAmt:0));
         if(bothLit && litAmt>0.03){ ctx.shadowColor=`rgba(${ca[0]},${ca[1]},${ca[2]},0.85)`; ctx.shadowBlur=8*DPR*litAmt; }
         ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke(); ctx.shadowBlur=0;
       }
     }
     function drawNode(n,t){
       const lit=isLit(n), hov=(n===hot);
-      const x=n.rx*DPR, y=n.ry*DPR; const [r,g,b]=hexToRgb(n.color);
+      const [x,y]=layoutPx(n.rx,n.ry); const [r,g,b]=hexToRgb(n.color);
       const tw = motionOn ? (0.8+0.2*Math.sin(t*(n.kind==='skill'?1.7:1.1)+n.x*0.7)) : 1;
       const pulse = (n.tier==='featured'&&motionOn) ? (1+0.07*Math.sin(t*1.4+n.bzp)) : 1;
       const dim = lit ? 1 : (1 - litAmt*0.6);
       const glowBoost = lit ? (1 + 0.45*litAmt) : 1;
-      const R=n.r*DPR*(hov?1.22:1)*tw;
+      const R=n.r*DPR*viewScale*(hov?1.22:1)*tw;
       const glow=R*(hov?4.2:2.6)*glowBoost*pulse;
       const ga=(hov?.55:(n.tier==='featured'?.4:.28))*dim*(lit?(1+0.3*litAmt):1)*pulse;
       const rg=ctx.createRadialGradient(x,y,0,x,y,glow);
       rg.addColorStop(0,`rgba(${r},${g},${b},${ga})`);rg.addColorStop(.4,`rgba(${r},${g},${b},${ga*0.3})`);rg.addColorStop(1,`rgba(${r},${g},${b},0)`);
       ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(x,y,glow,0,7); ctx.fill();
       if((n.spike || n.deg>=5 || hov) && lit){
-        ctx.strokeStyle=`rgba(${r},${g},${b},${(hov?.5:.26)*dim})`; ctx.lineWidth=DPR*0.7; const L=glow*0.95;
+        ctx.strokeStyle=`rgba(${r},${g},${b},${(hov?.5:.26)*dim})`; ctx.lineWidth=DPR*viewScale*0.7; const L=glow*0.95;
         ctx.beginPath(); ctx.moveTo(x-L,y);ctx.lineTo(x+L,y);ctx.moveTo(x,y-L);ctx.lineTo(x,y+L); ctx.stroke();
       }
       ctx.fillStyle=`rgba(${r},${g},${b},${0.96*dim})`; ctx.beginPath(); ctx.arc(x,y,R*0.95,0,7); ctx.fill();
@@ -262,10 +281,10 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
       else { if(!litSet || !lit) return; alpha = 0.85*litAmt; }
       if(hot && n!==hot){ const dd=Math.hypot(n.rx-hot.rx,n.ry-hot.ry); if(dd < hot.r+n.r+76) alpha *= (1-litAmt); }
       if(alpha<=0.05) return;
-      const x=n.rx*DPR, y=(n.ry+n.r+7)*DPR;
+      const [x,y]=layoutPx(n.rx,n.ry+n.r+7);
       ctx.save(); ctx.globalCompositeOperation='source-over';
       const size=(n.tier==='featured'?12.5:n.kind==='skill'?(n.hub?10.5:9.5):11);
-      ctx.font=`340 ${size*DPR}px "Fraunces", Georgia, serif`; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.font=`340 ${size*DPR*viewScale}px "Fraunces", Georgia, serif`; ctx.textAlign='center'; ctx.textBaseline='top';
       ctx.shadowColor='rgba(2,3,8,.92)'; ctx.shadowBlur=7*DPR; ctx.fillStyle=`rgba(233,236,245,${alpha})`;
       ctx.fillText(n.title, x, y); ctx.restore();
     }
@@ -273,28 +292,29 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     // ---------- interaction ----------
     let dragMoved=false, downX=0, downY=0;
     const tip=document.getElementById('tip');
-    function nodeAt(cx,cy){ let best=null,bd=1e9; for(const n of NODES){const d=Math.hypot(cx-n.x,cy-n.y);const hit=Math.max(n.r+7,11);if(d<hit&&d<bd){best=n;bd=d;}} return best; }
+    function nodeAt(sx,sy){ const[cx,cy]=screenToLayout(sx,sy); let best=null,bd=1e9; for(const n of NODES){const d=Math.hypot(cx-n.x,cy-n.y);const hit=Math.max(n.r+7,11);if(d<hit&&d<bd){best=n;bd=d;}} return best; }
     function setHot(n){
       if(n===hot)return; hot=n;
       if(n){ litSet=new Set(ADJ[n.id]); if(n.con) NODES.forEach(m=>{ if(m.con===n.con) litSet.add(m.id); }); }
       cv.style.cursor=n?(dragNode?'grabbing':'grab'):'default';
       if(n && !n.labelAlways){
+        const[tx,ty]=layoutToScreen(n.x,n.y);
         tip.querySelector('.nm').textContent=n.title;
         tip.querySelector('.tier').textContent = n.kind==='skill' ? (n.deg+' connections') : (n.con?CONST[n.con].name:'');
-        tip.style.left=n.x+'px'; tip.style.top=n.y+'px'; tip.style.opacity='1';
+        tip.style.left=tx+'px'; tip.style.top=ty+'px'; tip.style.opacity='1';
       } else tip.style.opacity='0';
     }
     let tmx=0,tmy=0,pmx=0,pmy=0;
     const onMove=e=>{
       const cx=e.clientX,cy=e.clientY;
-      if(dragNode){ dragNode.fx=cx; dragNode.fy=cy; reheat(0.35); if(Math.hypot(cx-downX,cy-downY)>4)dragMoved=true; tip.style.opacity='0'; return; }
+      if(dragNode){ const[lx,ly]=screenToLayout(cx,cy); dragNode.fx=lx; dragNode.fy=ly; reheat(0.35); if(Math.hypot(cx-downX,cy-downY)>4)dragMoved=true; tip.style.opacity='0'; return; }
       tmx=(cx/innerWidth-.5); tmy=(cy/innerHeight-.5);
       setHot(nodeAt(cx,cy));
-      if(hot && !hot.labelAlways){ tip.style.left=hot.x+'px'; tip.style.top=hot.y+'px'; }
+      if(hot && !hot.labelAlways){ const[tx,ty]=layoutToScreen(hot.x,hot.y); tip.style.left=tx+'px'; tip.style.top=ty+'px'; }
     };
     const onDown=e=>{
       if(!ready)return; const cx=e.clientX,cy=e.clientY,n=nodeAt(cx,cy);
-      if(n && !reduce){ dragNode=n;dragMoved=false;downX=cx;downY=cy;n.fx=n.x;n.fy=n.y;reheat(0.5);cv.style.cursor='grabbing';cv.setPointerCapture(e.pointerId);dismissThesis(); }
+      if(n && !reduce){ dragNode=n;dragMoved=false;downX=cx;downY=cy;const[lx,ly]=screenToLayout(cx,cy);n.fx=lx;n.fy=ly;reheat(0.5);cv.style.cursor='grabbing';cv.setPointerCapture(e.pointerId);dismissThesis(); }
       else if(n && reduce){ openFor(n); }
     };
     const onUp=e=>{
@@ -424,12 +444,18 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
 
     // ---------- resize / loop / boot ----------
     function resize(first){
-      DPR=Math.min(window.devicePixelRatio||1,2); CW=innerWidth; CH=innerHeight;
+      DPR=Math.min(window.devicePixelRatio||1,2);
+      const prevLayout=useLayout;
+      updateLayoutViewport();
       W=cv.width=Math.floor(innerWidth*DPR); H=cv.height=Math.floor(innerHeight*DPR);
       cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; area=innerWidth*innerHeight;
       if(!sprites.length) buildSprites();
       buildBg(); buildNebula(); buildVignette(); if(!grainTiles.length)buildGrain();
-      if(ready){ if(first) place(); reheat(first?0.9:0.4); }
+      if(innerWidth<560) document.getElementById('legend')?.classList.add('collapsed');
+      if(ready){
+        if(first||prevLayout!==useLayout) place();
+        reheat(first?0.9:0.4);
+      }
     }
     const t0=performance.now();
     function frame(now){
@@ -490,7 +516,7 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     rafId=requestAnimationFrame(frame);
 
     // boot model synchronously from imported JSON
-    buildModel(site); CW=innerWidth; CH=innerHeight; place();
+    buildModel(site); updateLayoutViewport(); place();
     if(reduce){ for(let i=0;i<520;i++) tick(); SIM.alpha=0; }
     ready=true; reheat(0.9);
     let dismissed=false; try{dismissed=!!localStorage.getItem(RKEY);}catch{}

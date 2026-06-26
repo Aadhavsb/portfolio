@@ -367,7 +367,7 @@
         { "label": "Transport", "value": "WebRTC" },
         { "label": "Sync", "value": "Authoritative server" }
       ],
-      "links": { "github": "https://github.com/Aadhavsb/arguably" },
+      "links": { "github": "https://github.com/Aadhavsb/arguably", "demo": "https://arguably.vercel.app" },
       "spanName": "arguably.sfu.relay",
       "constellation": "arena",
       "starKind": "project"
@@ -429,7 +429,7 @@
         { "label": "Users", "value": "1,000+" },
         { "label": "Sites", "value": "12" }
       ],
-      "links": { "github": "https://github.com/Aadhavsb/inventory360" },
+      "links": { "github": "https://github.com/Aadhavsb/inventory360", "demo": "https://inventory360-seven.vercel.app" },
       "spanName": "inventory360.assets.track",
       "starKind": "experience",
       "linkedExperience": "role-wildlife"
