@@ -69,7 +69,8 @@ export default function NightSky() {
         <div className="sub">A constellation of measurable work</div>
       </div>
 
-      <div id="hint"><span className="pulse" /> hover to trace links · drag to pull · click to open</div>
+      <div id="hint"><span className="pulse" /> hover to trace links · click to open</div>
+      <p id="sky-ps" className="sky-ps" aria-hidden="true">ps — bored? grab a star and pull the map around.</p>
       <div id="tip"><span className="nm" /><span className="tier" /></div>
 
       <div className="hud" id="idblock">
