@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { constellationOf, site } from "@/lib/site";
-import type { Project } from "@/data/types";
+import { constellationOf, experienceHref, projectHref, site } from "@/lib/site";
+import type { Experience, Project } from "@/data/types";
 
 export const metadata: Metadata = {
   title: "Work — Aadhav Bharadwaj",
@@ -9,8 +9,6 @@ export const metadata: Metadata = {
 };
 
 function Card({ p }: { p: Project }) {
-  const href = p.caseStudyPath || p.links?.demo || p.links?.github || null;
-  const internal = p.caseStudyPath;
   const con = constellationOf(p);
   const kindColor = p.starKind === "experience" ? "#ffcf7a" : "#a78bfa";
   const inner = (
@@ -23,12 +21,22 @@ function Card({ p }: { p: Project }) {
       <div className="wk-hook">{p.hook}</div>
     </>
   );
-  if (!href) return <div className="work-card">{inner}</div>;
-  if (internal) return <Link className="work-card" href={href}>{inner}</Link>;
   return (
-    <a className="work-card" href={href} target="_blank" rel="noreferrer">
+    <Link className="work-card" href={projectHref(p)}>
       {inner}
-    </a>
+    </Link>
+  );
+}
+
+function ExperienceCard({ r }: { r: Experience }) {
+  return (
+    <Link className="work-card" href={experienceHref(r)}>
+      <div className="wk-kind" style={{ color: "#ffcf7a" }}>Experience</div>
+      <div className="wk-title">{r.org}</div>
+      <div className="wk-hook">
+        {r.hook ?? `${r.role} · ${r.period}`}
+      </div>
+    </Link>
   );
 }
 
@@ -41,8 +49,8 @@ export default function WorkIndex() {
       <Link className="work-back" href="/">← Back to the sky</Link>
       <h1 className="work-h1">Work</h1>
       <p className="work-lede">
-        The same systems as the star map, in a plain list. Featured stars open full case studies;
-        the rest link to source.
+        The same systems as the star map, as plain writeup pages — overview, metrics,
+        and stack. Featured entries with deep dives include extra case-study sections.
       </p>
 
       <section className="work-section">
@@ -59,11 +67,7 @@ export default function WorkIndex() {
         <h2>Experience</h2>
         <div className="work-grid">
           {site.experience.map((r) => (
-            <div className="work-card" key={r.id}>
-              <div className="wk-kind" style={{ color: "#ffcf7a" }}>Experience</div>
-              <div className="wk-title">{r.org}</div>
-              <div className="wk-hook">{r.role} · {r.period}</div>
-            </div>
+            <ExperienceCard key={r.id} r={r} />
           ))}
         </div>
       </section>

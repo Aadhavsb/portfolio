@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CaseStudyBody } from "@/app/components/CaseStudyBody";
-import { findExperience, findProjectByCaseSlug, site } from "@/lib/site";
+import { findExperience, findProjectByWorkSlug, site } from "@/lib/site";
 import type { Metric } from "@/data/types";
 
 const CONST_COLOR: Record<string, string> = {
@@ -15,16 +15,16 @@ const CONST_COLOR: Record<string, string> = {
 };
 
 export function generateStaticParams() {
-  return site.projects
-    .filter((p) => p.caseStudyPath)
-    .map((p) => ({ slug: p.caseStudyPath!.split("/").pop() as string }));
+  return site.projects.map((p) => ({
+    slug: p.caseStudyPath?.split("/").filter(Boolean).pop() ?? p.id,
+  }));
 }
 
 export async function generateMetadata({
   params,
 }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const p = findProjectByCaseSlug(slug);
+  const p = findProjectByWorkSlug(slug);
   if (!p) return { title: "Not found" };
   return { title: `${p.title} — Aadhav Bharadwaj`, description: p.hook };
 }
@@ -33,7 +33,7 @@ export default async function CaseStudy({
   params,
 }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const p = findProjectByCaseSlug(slug);
+  const p = findProjectByWorkSlug(slug);
   if (!p) notFound();
 
   const con = p.constellation;
