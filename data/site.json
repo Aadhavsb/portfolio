@@ -93,7 +93,7 @@
       "id": "hybrid-retrieval",
       "label": "Hybrid Retrieval (BM25 + RRF)",
       "links": ["blackbox-qa", "abeyon-llm", "role-abeyon"],
-      "writeup": "BM25 plus dense retrieval fused with reciprocal rank fusion — the pattern that lifted Recall@40 to 0.887 and Recall@5 from 0.04 (BM25-only) to 0.88 on labeled sets. Standard approach across Abeyon production apps and the Blackbox-QA reference implementation."
+      "writeup": "BM25 plus dense retrieval fused with reciprocal rank fusion — the pattern that lifted Recall@40 to 0.887 at Abeyon and Recall@5 from 0.04 (BM25-only) to 0.64 (hybrid+rerank) on the full-corpus Blackbox-QA gold set. Standard approach across Abeyon production apps and the Blackbox-QA reference implementation."
     },
     {
       "id": "pgvector",
@@ -249,7 +249,7 @@
       "id": "linux",
       "label": "Linux",
       "links": ["role-abeyon", "blackbox-qa"],
-      "writeup": "Daily driver for WSL development, Docker hosts, and tmux-based eval runs during the Abeyon internship. Shell scripting for indexer pipelines, gateway tests, and long-running benchmark sessions."
+      "writeup": "Daily driver for WSL development, Docker hosts, and tmux-based eval runs during the Abeyon internship. Shell scripting for retrieval indexing pipelines, gateway tests, and long-running benchmark sessions."
     },
     {
       "id": "websocket",
@@ -436,7 +436,7 @@
           {
             "id": "hybrid-rag",
             "title": "Hybrid retrieval",
-            "body": "The tech-manual linking pipeline matched maintenance codes to manual sections using dense vector search alone. I added a BM25 arm and reciprocal rank fusion behind a retrieval-mode flag so teams could run dense, sparse, or hybrid paths without forking the pipeline.",
+            "body": "A maintenance-code retrieval pipeline matched codes to manual sections using dense vector search alone. I added a BM25 arm and reciprocal rank fusion behind a retrieval-mode flag so teams could run dense, sparse, or hybrid paths without forking the pipeline.",
             "metrics": [
               { "label": "Recall@40 (hybrid)", "value": "0.887" },
               { "label": "Retrieval R@5", "value": "0.754" },
@@ -456,14 +456,14 @@
               { "label": "Sections / WI", "value": "8 parallel" }
             ],
             "bullets": [
-              "Validated parallel fan-out with jstack during live runs on the indexer stack.",
+              "Validated parallel fan-out with jstack during live runs on an internal staging environment.",
               "Failure contract: any errored section fails the whole generation — no partial saves that leave inconsistent WIs."
             ]
           },
           {
             "id": "bedrock",
             "title": "Bedrock migration",
-            "body": "Migrated inference routing for three CUI-facing applications from self-hosted vLLM pods to AWS Bedrock model IDs through the same gateway surface — apps kept calling OpenAI-compatible routes while backends swapped underneath. Registered Mixtral, Qwen3, and Gemma models in gateway config with Bedrock runtime URLs."
+            "body": "Migrated inference routing for three internal applications from self-hosted vLLM pods to AWS Bedrock model IDs through the same gateway surface — apps kept calling OpenAI-compatible routes while backends swapped underneath. Registered Mixtral, Qwen3, and Gemma models behind the same gateway."
           },
           {
             "id": "observability",
@@ -481,7 +481,7 @@
             "body": "Built and operated LLM-as-judge pipelines over frozen gold sets — WI generation benchmarks, retrieval ablations, and stage-level CSV forensics on multi-hop RAG. The through-line: measure the weakest hop (retrieval vs rerank vs refine) instead of trusting a single end accuracy number.",
             "bullets": [
               "Refactored judge scoring so Python derives aggregates deterministically — the model only scores sections.",
-              "Gate false-negative work on the matching pipeline (CPSAMM-514): gate recall 97.8%, E2E accuracy +7.2 pp — ship pending PR merge."
+              "Cut false negatives in a retrieval pre-filter stage: recall to 97.8%, +7.2 pp end-to-end accuracy."
             ]
           },
           {
@@ -543,7 +543,7 @@
       "id": "eaton",
       "tier": "featured",
       "title": "Eaton GenAI Platform",
-      "subtitle": "AI Software Engineer Intern · Remote · Sep 2025 – Jan 2026",
+      "subtitle": "AI Software Engineer Intern (contracted through xLab) · Remote · Sep 2025 – Jan 2026",
       "hook": "MERN RAG chatbots for customer-interaction training with containerized deploy, RBAC, and live KPI dashboards.",
       "writeup": "Architected GenAI RAG chatbots for customer-interaction training using a MERN backend with vector retrieval and embedding search as AI Software Engineer Intern at Eaton Corporation (Sep 2025 – Jan 2026), improving onboarding efficiency by approximately 40%. Deployed a containerized MERN platform with CI/CD, JWT/RBAC, and live WebSocket KPI dashboards for production trainer session analytics across modular training workflows. Industry-scale GenAI in The Platform constellation — same RAG vocabulary as The Instrument, applied to trainer enablement rather than developer tooling.",
       "stack": ["MERN", "RAG", "Docker", "CI/CD", "WebSocket"],
@@ -669,7 +669,7 @@
     },
     {
       "id": "role-eaton",
-      "role": "AI Software Engineer Intern",
+      "role": "AI Software Engineer Intern (contracted through xLab)",
       "org": "Eaton Corporation",
       "period": "Sep 2025 – Jan 2026",
       "location": "Remote",
