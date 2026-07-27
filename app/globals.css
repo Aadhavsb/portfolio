@@ -118,6 +118,8 @@ body:has(#readme.on) #sky-ps,body:has(#spot.on) #sky-ps,body:has(#panel.open) #s
 .sp-span{font-size:10.5px;letter-spacing:.16em;color:var(--teal);margin-top:10px}
 .sp-hook{margin:16px 0 0;font-size:14px;line-height:1.6;color:#dbe0ec;font-style:italic;font-family:var(--font-fraunces),"Fraunces",serif}
 .sp-writeup{margin:18px 0 0;font-size:12.5px;line-height:1.85;color:#bcc4d4}
+.sp-writeup-list{margin:18px 0 0;padding-left:1.15em;font-size:12.5px;line-height:1.75;color:#bcc4d4}
+.sp-writeup-list li{margin-bottom:7px}
 .sp-pinned{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0 0}
 .sp-pinned .pm{border:1px solid var(--hair-strong);border-radius:14px;padding:18px 18px 15px;background:rgba(54,214,195,.04)}
 .sp-pinned .pv{font-family:var(--font-fraunces),"Fraunces",serif;font-size:30px;color:var(--amber);line-height:1}

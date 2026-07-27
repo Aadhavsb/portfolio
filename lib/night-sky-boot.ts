@@ -340,6 +340,7 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
         subtitle: n.subtitle,
         hook: n.hook,
         writeup: n.writeup,
+        writeupBullets: n.writeupBullets,
         spanName: n.spanName,
         id: n.id,
         starKind: n.starKind,

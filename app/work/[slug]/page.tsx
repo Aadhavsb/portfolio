@@ -64,10 +64,18 @@ export default async function CaseStudy({
       {p.subtitle && <p className="work-lede" style={{ color: "#aeb6c8" }}>{p.subtitle}</p>}
       {p.hook && <p className="work-lede">{p.hook}</p>}
 
-      {p.writeup && (
+      {(p.writeupBullets || p.writeup) && (
         <section className="work-section">
           <h2>Overview</h2>
-          <p className="cs-writeup">{p.writeup}</p>
+          {p.writeupBullets ? (
+            <ul className="cs-bullets">
+              {p.writeupBullets.map((b) => (
+                <li key={b}>{b}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="cs-writeup">{p.writeup}</p>
+          )}
         </section>
       )}
 

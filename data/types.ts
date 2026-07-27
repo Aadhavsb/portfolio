@@ -44,6 +44,7 @@ export interface Project {
   subtitle?: string;
   hook?: string;
   writeup?: string;
+  writeupBullets?: string[];
   stack?: string[];
   metrics?: Metric[];
   metricsPinned?: Metric[];

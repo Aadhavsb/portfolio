@@ -294,7 +294,11 @@
       "tier": "featured",
       "title": "Blackbox-QA",
       "hook": "Framework-free tool-calling agent over hybrid retrieval with Langfuse tracing and CI regression gates.",
-      "writeup": "Built a framework-free tool-calling agent over hybrid retrieval (BM25, dense embeddings, reciprocal rank fusion) and read-only SQL on the full NTSB aviation corpus — 30,646 reports and 125,213 narrative chunks. On that scale, hybrid+rerank Recall@5 reaches 0.64 versus 0.04 for BM25-only; end-to-end citation match is 0.68 and answer quality 0.76 on a frozen 25-query gold set. Langfuse traces every run with out-of-band judge scores, and a deterministic Recall@5 gate blocks PRs when retrieval regresses.",
+      "writeupBullets": [
+        "Built a framework-free tool-calling agent (bounded ReAct loop, 3 tools, read-only SQL guard) over hybrid retrieval — BM25, dense embeddings, reciprocal rank fusion — on the full NTSB aviation corpus: 30,646 reports, 125,213 narrative chunks.",
+        "Lifted Recall@5 from 0.04 (BM25-only) to 0.64 (hybrid+rerank); end-to-end citation match 0.68 and answer quality 0.76 on a frozen 25-query gold set.",
+        "Traced every run in self-hosted Langfuse with out-of-band judge scores, and gated PRs on a deterministic Recall@5 regression check."
+      ],
       "stack": ["Python", "FastAPI", "pgvector", "Langfuse", "Docker"],
       "metrics": [
         { "label": "Reports ingested", "value": "30,646" },
@@ -400,13 +404,20 @@
       "title": "Abeyon",
       "subtitle": "Software Engineer Intern — AI/LLM · Washington, DC · May 2026 – Present",
       "hook": "Production LLM internship — hybrid RAG eval wins, 2.49× batch latency, Bedrock migration, and self-hosted Langfuse across nine models.",
-      "writeup": "Software Engineer Intern at Abeyon (May 2026 – Present): shipped measurable LLM infrastructure in production, not a side project with a company logo pasted on. Implemented BM25 + dense hybrid retrieval with reciprocal rank fusion, improving Recall@40 from 0.875 to 0.887 and lifting retrieval-arm MRR to 0.610 on labeled evaluation sets. Cut work-item generation latency from 123.6s to 49.7s (2.49×) via parallel NDJSON batch processing and migrated inference routing to AWS Bedrock across three applications. Deployed self-hosted Langfuse v3 with custom pricing and tracing on the FastAPI gateway (vLLM + Bedrock) so cost, token, and latency attribution work company-wide — observability is one slice of the story, not the headline.",
-      "stack": ["FastAPI", "Langfuse", "vLLM", "AWS Bedrock", "pgvector", "Hybrid RAG", "LLM-as-Judge"],
+      "writeupBullets": [
+        "Fine-tuned open-weight LLMs (up to 24B) with LoRA SFT, lifting a production majority-vote ensemble from 0.506 to 0.706 macro-F1 (+40% rel.).",
+        "Implemented BM25 + dense hybrid retrieval with reciprocal rank fusion, improving Recall@40 from 0.875 to 0.887 on labeled evaluation sets.",
+        "Cut work-item generation latency from 123.6s to 49.7s (2.49×) via parallel NDJSON batch processing; migrated inference routing to AWS Bedrock across three applications.",
+        "Built LLM-as-judge evaluation pipelines with frozen gold sets; executed 100-case benchmarks and stage-level RAG debugging.",
+        "Deployed self-hosted Langfuse v3 and instrumented a production FastAPI LLM gateway with cost, token, and latency attribution across 9 models."
+      ],
+      "stack": ["FastAPI", "Langfuse", "vLLM", "AWS Bedrock", "pgvector", "Hybrid RAG", "Fine-Tuning (LoRA)", "LLM-as-Judge"],
       "metricsPinned": [
         { "label": "Recall@40 (hybrid)", "value": "0.887" },
         { "label": "WI latency win", "value": "2.49×" }
       ],
       "metricsScroll": [
+        { "label": "Fine-tune macro-F1", "value": "0.506 → 0.706", "tag": "eval" },
         { "label": "Retrieval R@5", "value": "0.754", "tag": "retrieval" },
         { "label": "vs dense R@5", "value": "0.713", "tag": "retrieval" },
         { "label": "MRR (retrieval arm)", "value": "0.610", "tag": "retrieval" },
@@ -424,78 +435,6 @@
         { "label": "MRR (retrieval arm)", "value": "0.610" }
       ],
       "links": {},
-      "caseStudyPath": "/work/abeyon-llm",
-      "caseStudy": {
-        "corpusNote": "NDA-safe summary — no customer names, proprietary configs, or production URLs. Metrics sourced from labeled internal eval sets and shipped benchmarks.",
-        "sections": [
-          {
-            "id": "context",
-            "title": "Context",
-            "body": "Abeyon builds gov-adjacent maintenance-domain software where LLM calls flow through a central OpenAI-compatible gateway to vLLM and AWS Bedrock backends. My internship work focused on measurable retrieval quality, batch generation latency, inference migration, and company-wide observability — not one-off prompts."
-          },
-          {
-            "id": "hybrid-rag",
-            "title": "Hybrid retrieval",
-            "body": "A maintenance-code retrieval pipeline matched codes to manual sections using dense vector search alone. I added a BM25 arm and reciprocal rank fusion behind a retrieval-mode flag so teams could run dense, sparse, or hybrid paths without forking the pipeline.",
-            "metrics": [
-              { "label": "Recall@40 (hybrid)", "value": "0.887" },
-              { "label": "Retrieval R@5", "value": "0.754" },
-              { "label": "vs dense R@5", "value": "0.713" },
-              { "label": "MRR (retrieval arm)", "value": "0.610" }
-            ],
-            "callout": "Root-caused a prior failure mode where dense-only retrieval missed keyword-critical matches — hybrid fusion recovered recall without sacrificing the semantic arm."
-          },
-          {
-            "id": "batch-latency",
-            "title": "Work-item generation latency",
-            "body": "Work-item (WI) generation drafted eight sections per request. The legacy path rebuilt shared DB context on every section and called the LLM serially from the browser. I shipped a parallel NDJSON batch endpoint: build context once, fan sections across a bounded thread pool, stream each section as a line the moment it completes.",
-            "metrics": [
-              { "label": "Avg latency", "value": "123.6s → 49.7s" },
-              { "label": "Speedup", "value": "2.49×" },
-              { "label": "Benchmark", "value": "100 frozen cases" },
-              { "label": "Sections / WI", "value": "8 parallel" }
-            ],
-            "bullets": [
-              "Validated parallel fan-out with jstack during live runs on an internal staging environment.",
-              "Failure contract: any errored section fails the whole generation — no partial saves that leave inconsistent WIs."
-            ]
-          },
-          {
-            "id": "bedrock",
-            "title": "Bedrock migration",
-            "body": "Migrated inference routing for three internal applications from self-hosted vLLM pods to AWS Bedrock model IDs through the same gateway surface — apps kept calling OpenAI-compatible routes while backends swapped underneath. Registered Mixtral, Qwen3, and Gemma models behind the same gateway."
-          },
-          {
-            "id": "observability",
-            "title": "Gateway observability",
-            "body": "Deployed self-hosted Langfuse v3 and instrumented the production FastAPI gateway: per-request token usage, latency, model resolution, and cost attribution across nine priced models (Bedrock list prices + derived vLLM rates). Traces omit prompt/response bodies for PII posture; X-Trace-Id echoes for cross-service correlation.",
-            "metrics": [
-              { "label": "Models priced", "value": "9" },
-              { "label": "Backends", "value": "vLLM + Bedrock" },
-              { "label": "Apps migrated", "value": "3" }
-            ]
-          },
-          {
-            "id": "eval-discipline",
-            "title": "Eval discipline",
-            "body": "Built and operated LLM-as-judge pipelines over frozen gold sets — WI generation benchmarks, retrieval ablations, and stage-level CSV forensics on multi-hop RAG. The through-line: measure the weakest hop (retrieval vs rerank vs refine) instead of trusting a single end accuracy number.",
-            "bullets": [
-              "Refactored judge scoring so Python derives aggregates deterministically — the model only scores sections.",
-              "Cut false negatives in a retrieval pre-filter stage: recall to 97.8%, +7.2 pp end-to-end accuracy."
-            ]
-          },
-          {
-            "id": "patterns",
-            "title": "Patterns I'd repeat",
-            "bullets": [
-              "Feature-flag retrieval modes before ripping out dense-only paths.",
-              "Stream partial results (NDJSON) when parallel work finishes at different times.",
-              "Keep observability off the hot path — async Langfuse batches, no bodies in traces.",
-              "Commit baselines and gate deterministic layers; monitor stochastic judge runs."
-            ]
-          }
-        ]
-      },
       "spanName": "abeyon.gateway.chat_completions",
       "constellation": "instrument",
       "starKind": "experience",
@@ -506,7 +445,11 @@
       "tier": "featured",
       "title": "Arguably",
       "hook": "Rules-driven debate engine with mediasoup SFU, Socket.IO turn sync, and live transcription pipeline.",
-      "writeup": "Implemented a standalone mediasoup SFU and Socket.IO signaling stack (~2.5k LOC) and integrated browser WebRTC functionality through custom media components for a rules-driven live debate engine. Added SFU unit testing, CI automation, HTTPS/CORS/TURN infrastructure, and production reliability improvements so multi-party rooms stay synchronized under authoritative server turn logic. Real-time infrastructure story for The Arena constellation — the counterweight to traceable batch LLM systems in The Instrument.",
+      "writeupBullets": [
+        "Implemented a standalone mediasoup SFU and Socket.IO signaling stack (~2.5k LOC) for a rules-driven live debate engine with authoritative server turn logic.",
+        "Integrated browser WebRTC through custom media components; multi-party rooms stay synchronized under server-authoritative sync.",
+        "Added SFU unit testing, CI automation, and HTTPS/CORS/TURN infrastructure for production reliability."
+      ],
       "stack": ["mediasoup", "WebRTC", "Socket.IO", "Next.js", "Prisma"],
       "metrics": [
         { "label": "SFU + signaling", "value": "~2.5k LOC" },
@@ -524,7 +467,10 @@
       "title": "CWRU AI Avatar Kiosk",
       "subtitle": "Software Engineer Intern · WSOM, CWRU · Jun 2025 – Present",
       "hook": "Dual-screen AI avatar kiosk with Next.js, AWS Lambda, HeyGen, and Pinecone RAG — sub-1.5s latency for 100+ daily users through CWRU SSO.",
-      "writeup": "Built a dual-screen AI avatar kiosk using Next.js, AWS Lambda, HeyGen, and Pinecone-backed RAG as Software Engineer Intern at WSOM, Case Western Reserve University (Jun 2025 – Present). Achieved sub-1.5s end-to-end latency while serving 100+ daily users through CWRU SSO on physical kiosk hardware. Bridges shipped product UX (The Presence) with the same RAG patterns measured in Blackbox-QA and Abeyon — proof that retrieval quality work shows up in user-facing latency budgets, not just offline benchmarks.",
+      "writeupBullets": [
+        "Built a dual-screen AI avatar kiosk using Next.js, AWS Lambda, HeyGen, and Pinecone-backed RAG for WSOM, Case Western Reserve University.",
+        "Achieved sub-1.5s end-to-end latency serving 100+ daily users through CWRU SSO on physical kiosk hardware."
+      ],
       "stack": ["Next.js", "AWS Lambda", "HeyGen", "Pinecone", "RAG"],
       "metrics": [
         { "label": "Latency", "value": "<1.5s" },
@@ -545,7 +491,10 @@
       "title": "Eaton GenAI Platform",
       "subtitle": "AI Software Engineer Intern (contracted through xLab) · Remote · Sep 2025 – Jan 2026",
       "hook": "MERN RAG chatbots for customer-interaction training with containerized deploy, RBAC, and live KPI dashboards.",
-      "writeup": "Architected GenAI RAG chatbots for customer-interaction training using a MERN backend with vector retrieval and embedding search as AI Software Engineer Intern at Eaton Corporation (Sep 2025 – Jan 2026), improving onboarding efficiency by approximately 40%. Deployed a containerized MERN platform with CI/CD, JWT/RBAC, and live WebSocket KPI dashboards for production trainer session analytics across modular training workflows. Industry-scale GenAI in The Platform constellation — same RAG vocabulary as The Instrument, applied to trainer enablement rather than developer tooling.",
+      "writeupBullets": [
+        "Architected GenAI RAG chatbots for customer-interaction training using a MERN backend with vector retrieval and embedding search, improving onboarding efficiency by approximately 40%.",
+        "Deployed a containerized MERN platform with CI/CD, JWT/RBAC, and live WebSocket KPI dashboards for production trainer session analytics across modular training workflows."
+      ],
       "stack": ["MERN", "RAG", "Docker", "CI/CD", "WebSocket"],
       "metrics": [
         { "label": "Onboarding efficiency", "value": "~40%" },
@@ -661,6 +610,7 @@
       "location": "Washington, DC",
       "skyStarId": "abeyon-llm",
       "highlights": [
+        "Fine-tuned open-weight LLMs (up to 24B) with LoRA SFT, lifting a production majority-vote ensemble from 0.506 to 0.706 macro-F1 (+40% rel.).",
         "Implemented BM25 + dense hybrid retrieval with reciprocal rank fusion, improving Recall@40 to 0.887 on labeled evaluation sets.",
         "Cut work-item generation latency 2.49× (123.6s → 49.7s) via parallel NDJSON batch processing; migrated inference routing to AWS Bedrock across three applications.",
         "Built LLM-as-judge evaluation pipelines with frozen gold sets; executed 100-case benchmarks and stage-level RAG debugging.",

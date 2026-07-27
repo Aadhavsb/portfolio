@@ -113,6 +113,7 @@ export interface SpotlightInput {
   subtitle?: string;
   hook?: string;
   writeup?: string;
+  writeupBullets?: string[];
   spanName?: string;
   id: string;
   starKind?: string;
@@ -175,7 +176,14 @@ export function renderSpotlight(card: HTMLElement, data: SpotlightInput, onClose
   card.appendChild(top);
 
   if (data.hook) card.appendChild(textEl("p", data.hook, "sp-hook"));
-  if (data.writeup) card.appendChild(textEl("p", data.writeup, "sp-writeup"));
+  if (data.writeupBullets?.length) {
+    const list = document.createElement("ul");
+    list.className = "sp-writeup-list";
+    for (const item of data.writeupBullets) list.appendChild(textEl("li", item));
+    card.appendChild(list);
+  } else if (data.writeup) {
+    card.appendChild(textEl("p", data.writeup, "sp-writeup"));
+  }
 
   const pinned = data.metricsPinned?.length
     ? data.metricsPinned
