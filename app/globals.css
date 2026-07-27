@@ -5,12 +5,13 @@
   --proj:#a78bfa; --exp:#ffcf7a; --skill:#ff7e60;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--void);color:var(--ink)}
+html,body{margin:0;background:var(--void);color:var(--ink);overscroll-behavior:none}
 body{font-family:var(--font-ibm-plex-mono),"IBM Plex Mono",ui-monospace,monospace;-webkit-font-smoothing:antialiased}
 a{color:inherit}
 
 /* ===== night sky home ===== */
-#sky{position:fixed;inset:0;z-index:0;display:block;width:100vw;height:100vh;touch-action:none}
+#sky{position:fixed;inset:0;z-index:0;display:block;width:100vw;height:100vh;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+@supports (height:100dvh){ #sky{height:100dvh} }
 
 #scrim{position:fixed;inset:0;background:radial-gradient(120% 120% at 70% 50%,rgba(2,3,8,.2),rgba(2,3,8,.78));
   opacity:0;pointer-events:none;transition:opacity .5s ease;z-index:20}
@@ -72,6 +73,14 @@ body:has(#readme.on) #sky-ps,body:has(#spot.on) #sky-ps,body:has(#panel.open) #s
   background:rgba(6,9,16,.86);backdrop-filter:blur(7px);border:1px solid var(--hair-strong);border-radius:9px;padding:7px 13px;box-shadow:0 10px 34px rgba(0,0,0,.6)}
 #tip .nm{font-family:var(--font-fraunces),"Fraunces",serif;font-size:13px;color:var(--ink)}
 #tip .tier{display:block;font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:#b8c0d2;margin-top:3px}
+/* Phase 3, item 17: flip below the node instead of above near the top edge (clamped in JS via .flip) */
+#tip.flip{transform:translate(-50%,14px)}
+
+/* Phase 3, item 18: copy variants gated by a `touch` class set on <body> at boot via
+   matchMedia('(pointer: coarse)') — see lib/night-sky-boot.ts. Default (no class) shows mouse copy. */
+.hint-touch,.rd-tip-touch,.rd-ps-touch{display:none}
+body.touch .hint-touch,body.touch .rd-tip-touch,body.touch .rd-ps-touch{display:inline}
+body.touch .hint-mouse,body.touch .rd-tip-mouse,body.touch .rd-ps-mouse{display:none}
 
 /* ---- side panel (gallery · lab · skill) ---- */
 #panel{position:fixed;z-index:40;top:0;right:0;height:100%;width:min(430px,92vw);background:var(--panel);backdrop-filter:blur(22px) saturate(1.1);

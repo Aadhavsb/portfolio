@@ -55,6 +55,10 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     let W=0,H=0,DPR=1,CW=0,CH=0,area=0;
     const LAYOUT_W=1280, LAYOUT_H=820;
     let viewScale=1, offsetX=0, offsetY=0, useLayout=false;
+    // fit* = baseline "reset" camera computed purely from viewport size; viewScale/offsetX/offsetY
+    // are the live camera (fit * user zoom/pan, mobile-only). On desktop (useLayout=false) live===fit.
+    let fitScale=1, fitX=0, fitY=0;
+    const MIN_ZOOM=1, MAX_ZOOM=4;
     function screenToLayout(sx,sy){return[(sx-offsetX)/viewScale,(sy-offsetY)/viewScale];}
     function layoutToScreen(lx,ly){return[offsetX+lx*viewScale,offsetY+ly*viewScale];}
     function layoutPx(lx,ly){const[sx,sy]=layoutToScreen(lx,ly);return[sx*DPR,sy*DPR];}
@@ -62,14 +66,29 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
       const vw=innerWidth,vh=innerHeight;
       useLayout=vw<900||vh<640;
       if(useLayout){
-        viewScale=Math.min(vw/LAYOUT_W,vh/LAYOUT_H);
-        offsetX=(vw-LAYOUT_W*viewScale)/2;
-        offsetY=(vh-LAYOUT_H*viewScale)/2;
+        fitScale=Math.min(vw/LAYOUT_W,vh/LAYOUT_H);
+        fitX=(vw-LAYOUT_W*fitScale)/2;
+        fitY=(vh-LAYOUT_H*fitScale)/2;
         CW=LAYOUT_W; CH=LAYOUT_H;
       } else {
-        viewScale=1; offsetX=0; offsetY=0;
+        fitScale=1; fitX=0; fitY=0;
         CW=vw; CH=vh;
       }
+    }
+    function resetCamera(){ viewScale=fitScale; offsetX=fitX; offsetY=fitY; }
+    // Mobile-only camera clamp (Phase 2, item 9): gated on useLayout so desktop is never touched.
+    function clampCamera(){
+      if(!useLayout) return;
+      const contentW=CW*viewScale, contentH=CH*viewScale;
+      if(contentW<=innerWidth) offsetX=(innerWidth-contentW)/2;
+      else offsetX=clamp(offsetX, innerWidth-contentW, 0);
+      if(contentH<=innerHeight) offsetY=(innerHeight-contentH)/2;
+      else offsetY=clamp(offsetY, innerHeight-contentH, 0);
+    }
+    // Damp label font growth relative to zoom (Phase 2, item 12). No-op on desktop (viewScale===fitScale).
+    function labelViewScale(){
+      if(!useLayout || !fitScale) return viewScale;
+      return fitScale*Math.pow(viewScale/fitScale, 0.6);
     }
     let bgStars=[], neb=null, grainTiles=[], grainPats=[], gi=0, vignette=null, bgGrad=null;
     let sprites=[], spikeSprite=null, meteors=[], nextMeteor=4, lastT=0;
@@ -78,7 +97,17 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     let NODES: GraphNode[] = [], NMAP: Record<string, GraphNode> = {}, EDGES: GraphNode[] = [], ADJ: Record<string, Set<string>> = {}, ROLE: Record<string, GraphNode> = {}, ROLE_STAR: Record<string, string | null> = {}, TS={featured:1.45,gallery:1.0,labs:0.92};
     let ready=false;
     let dragNode: GraphNode | null = null;
+    let dragPointerId: number | null = null;
     let hot: GraphNode | null = null;
+
+    // ---------- touch / multi-pointer bookkeeping (Phase 2) ----------
+    const pointers = new Map<number, { x: number; y: number }>();
+    let panPointerId: number | null = null, panStartX = 0, panStartY = 0;
+    let pinchActive = false, pinchStartDist = 0, pinchStartViewScale = 1;
+    let pinchAnchorLayout: [number, number] = [0, 0];
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+      document.body.classList.add('touch');
+    }
 
     // lifecycle
     let killed=false, rafId=0, rzTimer=0;
@@ -227,7 +256,7 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
         const [ax,ay]=layoutPx(sx,minY-30);
         const isHotCon = hot && hot.con===key;
         const dim = isHotCon ? 0.42 : (0.30 - 0.16*litAmt);
-        ctx.font=`340 ${15*DPR*viewScale}px "Fraunces", Georgia, serif`;
+        ctx.font=`340 ${15*DPR*labelViewScale()}px "Fraunces", Georgia, serif`;
         ctx.fillStyle=`rgba(233,236,245,${dim})`; ctx.shadowColor='rgba(2,3,8,.8)'; ctx.shadowBlur=10*DPR;
         ctx.fillText(CONST[key].name.toUpperCase(), ax, ay); ctx.shadowBlur=0;
       }
@@ -284,7 +313,7 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
       const [x,y]=layoutPx(n.rx,n.ry+n.r+7);
       ctx.save(); ctx.globalCompositeOperation='source-over';
       const size=(n.tier==='featured'?12.5:n.kind==='skill'?(n.hub?10.5:9.5):11);
-      ctx.font=`340 ${size*DPR*viewScale}px "Fraunces", Georgia, serif`; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.font=`340 ${size*DPR*labelViewScale()}px "Fraunces", Georgia, serif`; ctx.textAlign='center'; ctx.textBaseline='top';
       ctx.shadowColor='rgba(2,3,8,.92)'; ctx.shadowBlur=7*DPR; ctx.fillStyle=`rgba(233,236,245,${alpha})`;
       ctx.fillText(n.title, x, y); ctx.restore();
     }
@@ -292,7 +321,28 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     // ---------- interaction ----------
     let dragMoved=false, downX=0, downY=0;
     const tip=document.getElementById('tip');
-    function nodeAt(sx,sy){ const[cx,cy]=screenToLayout(sx,sy); let best=null,bd=1e9; for(const n of NODES){const d=Math.hypot(cx-n.x,cy-n.y);const hit=Math.max(n.r+7,11);if(d<hit&&d<bd){best=n;bd=d;}} return best; }
+    function positionTip(tx,ty){
+      // Phase 3, item 17: flip below the node near the top edge so the tooltip doesn't clip offscreen.
+      tip.style.left=tx+'px'; tip.style.top=ty+'px';
+      tip.classList.toggle('flip', ty<90);
+    }
+    function nodeAt(sx,sy,pointerType){
+      // Phase 1: scale-aware hit radius (touch gets a ~44px screen target converted to layout units;
+      // mouse keeps the original 11 layout-unit radius) + touch-only tie-break bias toward larger nodes.
+      const[cx,cy]=screenToLayout(sx,sy);
+      const isTouch=pointerType==='touch';
+      const minHit = isTouch ? (22/viewScale) : 11;
+      let best=null,bd=1e9,bestR=-1;
+      for(const n of NODES){
+        const d=Math.hypot(cx-n.x,cy-n.y);
+        const hit=Math.max(n.r+7,minHit);
+        if(d>=hit) continue;
+        if(isTouch){
+          if(n.r>bestR || (n.r===bestR && d<bd)){ best=n; bd=d; bestR=n.r; }
+        } else if(d<bd){ best=n; bd=d; }
+      }
+      return best;
+    }
     function setHot(n){
       if(n===hot)return; hot=n;
       if(n){ litSet=new Set(ADJ[n.id]); if(n.con) NODES.forEach(m=>{ if(m.con===n.con) litSet.add(m.id); }); }
@@ -301,32 +351,130 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
         const[tx,ty]=layoutToScreen(n.x,n.y);
         tip.querySelector('.nm').textContent=n.title;
         tip.querySelector('.tier').textContent = n.kind==='skill' ? (n.deg+' connections') : (n.con?CONST[n.con].name:'');
-        tip.style.left=tx+'px'; tip.style.top=ty+'px'; tip.style.opacity='1';
+        positionTip(tx,ty); tip.style.opacity='1';
       } else tip.style.opacity='0';
+    }
+    // ---- pinch-to-zoom (Phase 2; mobile-only, all call sites gated on useLayout) ----
+    function startPinch(){
+      const pts=[...pointers.values()];
+      if(pts.length<2) return;
+      const [p1,p2]=pts;
+      pinchActive=true;
+      pinchStartDist=Math.hypot(p2.x-p1.x,p2.y-p1.y)||1;
+      pinchStartViewScale=viewScale;
+      const midX=(p1.x+p2.x)/2, midY=(p1.y+p2.y)/2;
+      pinchAnchorLayout=screenToLayout(midX,midY);
+      tip.style.opacity='0';
+    }
+    function updatePinch(){
+      const pts=[...pointers.values()];
+      if(pts.length<2) return;
+      const [p1,p2]=pts;
+      const dist=Math.hypot(p2.x-p1.x,p2.y-p1.y)||1;
+      const midX=(p1.x+p2.x)/2, midY=(p1.y+p2.y)/2;
+      viewScale=clamp(pinchStartViewScale*(dist/pinchStartDist), fitScale*MIN_ZOOM, fitScale*MAX_ZOOM);
+      offsetX=midX-pinchAnchorLayout[0]*viewScale;
+      offsetY=midY-pinchAnchorLayout[1]*viewScale;
+      clampCamera();
     }
     let tmx=0,tmy=0,pmx=0,pmy=0;
     const onMove=e=>{
+      if(pointers.has(e.pointerId)) pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
       const cx=e.clientX,cy=e.clientY;
-      if(dragNode){ const[lx,ly]=screenToLayout(cx,cy); dragNode.fx=lx; dragNode.fy=ly; reheat(0.35); if(Math.hypot(cx-downX,cy-downY)>4)dragMoved=true; tip.style.opacity='0'; return; }
+
+      if(useLayout && pinchActive && pointers.size>=2){ updatePinch(); return; }
+
+      if(dragNode && e.pointerId===dragPointerId){
+        const[lx,ly]=screenToLayout(cx,cy); dragNode.fx=lx; dragNode.fy=ly; reheat(0.35);
+        const thresh=e.pointerType==='touch'?10:4;
+        if(Math.hypot(cx-downX,cy-downY)>thresh)dragMoved=true;
+        tip.style.opacity='0'; return;
+      }
+
+      if(useLayout && panPointerId===e.pointerId){
+        offsetX+=cx-panStartX; offsetY+=cy-panStartY;
+        panStartX=cx; panStartY=cy;
+        clampCamera();
+        return;
+      }
+
       tmx=(cx/innerWidth-.5); tmy=(cy/innerHeight-.5);
-      setHot(nodeAt(cx,cy));
-      if(hot && !hot.labelAlways){ const[tx,ty]=layoutToScreen(hot.x,hot.y); tip.style.left=tx+'px'; tip.style.top=ty+'px'; }
+      setHot(nodeAt(cx,cy,e.pointerType));
+      if(hot && !hot.labelAlways){ const[tx,ty]=layoutToScreen(hot.x,hot.y); positionTip(tx,ty); }
     };
     const onDown=e=>{
-      if(!ready)return; const cx=e.clientX,cy=e.clientY,n=nodeAt(cx,cy);
-      if(n && !reduce){ dragNode=n;dragMoved=false;downX=cx;downY=cy;const[lx,ly]=screenToLayout(cx,cy);n.fx=lx;n.fy=ly;reheat(0.5);cv.style.cursor='grabbing';cv.setPointerCapture(e.pointerId);dismissThesis(); }
+      if(!ready)return;
+      pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      const cx=e.clientX,cy=e.clientY;
+
+      // 2+ pointers on mobile -> pinch-zoom takes priority; cancel any in-flight node drag/pan.
+      if(useLayout && pointers.size>=2){
+        if(dragNode){ dragNode.fx=null; dragNode.fy=null; dragNode=null; dragPointerId=null; reheat(0.3); }
+        panPointerId=null;
+        setHot(null);
+        startPinch();
+        return;
+      }
+
+      const n=nodeAt(cx,cy,e.pointerType);
+      if(n && !reduce){
+        dragNode=n;dragPointerId=e.pointerId;dragMoved=false;downX=cx;downY=cy;
+        const[lx,ly]=screenToLayout(cx,cy);n.fx=lx;n.fy=ly;reheat(0.5);
+        cv.style.cursor='grabbing';cv.setPointerCapture(e.pointerId);dismissThesis();
+      }
       else if(n && reduce){ openFor(n); }
+      else if(useLayout){ panPointerId=e.pointerId; panStartX=cx; panStartY=cy; setHot(null); }
     };
     const onUp=e=>{
-      if(dragNode){ const n=dragNode;dragNode=null;n.fx=null;n.fy=null;reheat(0.28);cv.style.cursor=nodeAt(e.clientX,e.clientY)?'grab':'default'; if(!dragMoved) openFor(n); }
+      pointers.delete(e.pointerId);
+
+      if(dragNode && e.pointerId===dragPointerId){
+        const n=dragNode;dragNode=null;dragPointerId=null;n.fx=null;n.fy=null;reheat(0.28);
+        cv.style.cursor=nodeAt(e.clientX,e.clientY,e.pointerType)?'grab':'default';
+        if(!dragMoved){
+          // Phase 3, item 14: touch gets two-step tap (trace, then open on the already-traced node).
+          if(e.pointerType==='touch'){ if(hot===n) openFor(n); else setHot(n); }
+          else openFor(n);
+        }
+        return;
+      }
+
+      if(panPointerId===e.pointerId){ panPointerId=null; return; }
+
+      if(pinchActive){
+        if(pointers.size>=2){ startPinch(); } // still 2+ fingers (one swapped) -> rebase, no snap
+        else if(pointers.size===1 && useLayout){
+          pinchActive=false;
+          const [pid]=[...pointers.keys()]; const p=pointers.get(pid);
+          panPointerId=pid; panStartX=p.x; panStartY=p.y; // 2->1: continue as pan from current position
+        } else pinchActive=false;
+        return;
+      }
+
+      // Tap on empty sky clears the trace (Phase 3, item 16).
+      if(e.pointerType==='touch' && !nodeAt(e.clientX,e.clientY,e.pointerType)) setHot(null);
     };
-    const onCancel=()=>{ if(dragNode){dragNode.fx=null;dragNode.fy=null;dragNode=null;reheat(0.5);} };
-    const onLeave=()=>{ if(!dragNode) setHot(null); };
+    const onCancel=e=>{
+      pointers.delete(e.pointerId);
+      if(dragNode && e.pointerId===dragPointerId){ dragNode.fx=null;dragNode.fy=null;dragNode=null;dragPointerId=null;reheat(0.5); }
+      if(panPointerId===e.pointerId) panPointerId=null;
+      if(pinchActive && pointers.size<2) pinchActive=false;
+    };
+    const onLeave=(e)=>{
+      // Phase 3, item 15: pointerleave fires immediately on touch lift — don't let it instantly clear the trace.
+      if(e && e.pointerType==='touch') return;
+      if(!dragNode) setHot(null);
+    };
+    // Phase 4, item 20: iOS Safari gesture events can leak into page-zoom; block them as insurance.
+    const onGesture=e=>{ e.preventDefault(); };
     cv.addEventListener('pointermove',onMove);
     cv.addEventListener('pointerdown',onDown);
     cv.addEventListener('pointerup',onUp);
     cv.addEventListener('pointercancel',onCancel);
     cv.addEventListener('pointerleave',onLeave);
+    cv.addEventListener('gesturestart',onGesture,{passive:false});
+    cv.addEventListener('gesturechange',onGesture,{passive:false});
+    cv.addEventListener('gestureend',onGesture,{passive:false});
     function openFor(n){ if(n.kind==='proj' && n.tier==='featured') openSpotlight(n); else openPanel(n); }
 
     // ---------- spotlight ----------
@@ -365,6 +513,7 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
       releaseSpotTrap = null;
       spot.classList.remove('on');
       spot.setAttribute('aria-hidden','true');
+      setHot(null);
     }
     spot?.addEventListener('click', e=>{ if(e.target===spot) closeSpot(); });
 
@@ -416,6 +565,7 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
       panel.classList.remove('open');
       panel.setAttribute('aria-hidden','true');
       scrim?.classList.remove('on');
+      setHot(null);
     }
     $('p-close')?.addEventListener('click', closePanel);
     scrim?.addEventListener('click', closePanel);
@@ -447,12 +597,34 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     function resize(first){
       DPR=Math.min(window.devicePixelRatio||1,2);
       const prevLayout=useLayout;
+      // Phase 2, item 13: preserve relative zoom across resize/iOS address-bar collapse; only hard
+      // reset the camera on orientation change, first boot, or a layout-mode toggle. Desktop always
+      // takes the resetCamera() branch below since hadCamera requires useLayout.
+      const prevFitScale=fitScale;
+      const prevPortrait=innerWidth<innerHeight;
+      const hadCamera=ready && useLayout && prevLayout;
+      const centerLayout=hadCamera?screenToLayout(innerWidth/2,innerHeight/2):null;
+      const prevZoom=prevFitScale?viewScale/prevFitScale:1;
+
       updateLayoutViewport();
       W=cv.width=Math.floor(innerWidth*DPR); H=cv.height=Math.floor(innerHeight*DPR);
       cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; area=innerWidth*innerHeight;
       if(!sprites.length) buildSprites();
       buildBg(); buildNebula(); buildVignette(); if(!grainTiles.length)buildGrain();
       if(innerWidth<560) document.getElementById('legend')?.classList.add('collapsed');
+
+      const orientationChanged=prevPortrait!==(innerWidth<innerHeight);
+      if(useLayout && hadCamera && !orientationChanged && !first){
+        viewScale=clamp(fitScale*prevZoom, fitScale*MIN_ZOOM, fitScale*MAX_ZOOM);
+        if(centerLayout){
+          offsetX=innerWidth/2-centerLayout[0]*viewScale;
+          offsetY=innerHeight/2-centerLayout[1]*viewScale;
+        } else { offsetX=fitX; offsetY=fitY; }
+        clampCamera();
+      } else {
+        resetCamera();
+      }
+
       if(ready){
         if(first||prevLayout!==useLayout) place();
         reheat(first?0.9:0.4);
@@ -530,6 +702,9 @@ export function bootNightSky(site: SiteData, ui: NightSkyUi) {
     window.removeEventListener('resize',onResize); window.removeEventListener('keydown',onKey);
     cv.removeEventListener('pointermove',onMove); cv.removeEventListener('pointerdown',onDown);
     cv.removeEventListener('pointerup',onUp); cv.removeEventListener('pointercancel',onCancel); cv.removeEventListener('pointerleave',onLeave);
+    cv.removeEventListener('gesturestart',onGesture); cv.removeEventListener('gesturechange',onGesture); cv.removeEventListener('gestureend',onGesture);
+    pointers.clear(); dragNode=null; dragPointerId=null; panPointerId=null; pinchActive=false;
+    document.body.classList.remove('touch');
     document.body.style.overflow=prevOverflow;
   };
 }

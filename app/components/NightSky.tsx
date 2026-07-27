@@ -69,7 +69,11 @@ export default function NightSky() {
         <div className="sub">A constellation of measurable work</div>
       </div>
 
-      <div id="hint"><span className="pulse" /> hover to trace links · click to open</div>
+      <div id="hint">
+        <span className="pulse" />
+        <span className="hint-mouse">hover to trace links · click to open</span>
+        <span className="hint-touch">tap to trace · tap again to open · pinch to zoom</span>
+      </div>
       <p id="sky-ps" className="sky-ps" aria-hidden="true">ps — bored? grab a star and pull the map around.</p>
       <div id="tip"><span className="nm" /><span className="tier" /></div>
 
@@ -158,7 +162,10 @@ export default function NightSky() {
             </div>
           </div>
 
-          <p className="rd-tip"><b>Try this:</b> click a large star for the full story (metrics + stack). Hover any star to see what connects. Résumé &amp; LinkedIn — top right.</p>
+          <p className="rd-tip">
+            <span className="rd-tip-mouse"><b>Try this:</b> click a large star for the full story (metrics + stack). Hover any star to see what connects. Résumé &amp; LinkedIn — top right.</span>
+            <span className="rd-tip-touch"><b>Try this:</b> tap a star to trace its links, tap again to open the full story. Pinch to zoom, drag empty sky to pan.</span>
+          </p>
 
           <div className="actions">
             <button className="enter" id="rd-enter">Explore the map
@@ -166,7 +173,10 @@ export default function NightSky() {
             </button>
             <label className="dna"><input type="checkbox" id="rd-dna" /> Don&apos;t show again</label>
           </div>
-          <p className="rd-ps">ps — bored? grab a star and pull the whole map around.</p>
+          <p className="rd-ps">
+            <span className="rd-ps-mouse">ps — bored? grab a star and pull the whole map around.</span>
+            <span className="rd-ps-touch">ps — bored? pinch to zoom in, drag to pan around.</span>
+          </p>
         </div>
       </div>
     </>
